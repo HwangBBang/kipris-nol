@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+
+
+<response>
+	<header>
+		<resultCode></resultCode>
+		<resultMsg></resultMsg>
+	</header>
+	<body>
+		<items>
+			<relateddocsonfileInfo>
+				<applicationNumber>4020240133564</applicationNumber>
+				<appReferenceNumber> </appReferenceNumber>
+				<documentNumber>112024078653177</documentNumber>
+				<documentDate>20240719</documentDate>
+				<documentTitle>[상표등록출원][상표]상표등록출원서</documentTitle>
+				<documentTitleEng>[Trademark Registration Application][Trademark]  Application for Trademark Registration</documentTitleEng>
+				<status>수리</status>
+				<statusEng>Accepted</statusEng>
+				<step>출원</step>
+				<trialNumber> </trialNumber>
+				<registrationNumber> </registrationNumber>
+				<regReferenceNumber> </regReferenceNumber>
+			</relateddocsonfileInfo>
+			<relateddocsonfileInfo>
+				<applicationNumber>4020240133564</applicationNumber>
+				<appReferenceNumber> </appReferenceNumber>
+				<documentNumber>112024079570299</documentNumber>
+				<documentDate>20240722</documentDate>
+				<documentTitle>[우선심사신청]심사청구서·우선심사신청서</documentTitle>
+				<documentTitleEng> </documentTitleEng>
+				<status>수리</status>
+				<statusEng>Accepted</statusEng>
+				<step>출원</step>
+				<trialNumber> </trialNumber>
+				<registrationNumber> </registrationNumber>
+				<regReferenceNumber> </regReferenceNumber>
+			</relateddocsonfileInfo>
+			<relateddocsonfileInfo>
+				<applicationNumber>4020240133564</applicationNumber>
+				<appReferenceNumber> </appReferenceNumber>
+				<documentNumber>952024074861233</documentNumber>
+				<documentDate>20240903</documentDate>
+				<documentTitle>우선심사결정서</documentTitle>
+				<documentTitleEng>Decision on Preferential Examination</documentTitleEng>
+				<status>발송처리완료</status>
+				<statusEng>Completion of Transmission</statusEng>
+				<step>출원</step>
+				<trialNumber> </trialNumber>
+				<registrationNumber> </registrationNumber>
+				<regReferenceNumber> </regReferenceNumber>
+			</relateddocsonfileInfo>
+			<relateddocsonfileInfo>
+				<applicationNumber>4020240133564</applicationNumber>
+				<appReferenceNumber> </appReferenceNumber>
+				<documentNumber>952024083904758</documentNumber>
+				<documentDate>20241002</documentDate>
+				<documentTitle>의견제출통지서</documentTitle>
+				<documentTitleEng>Notification of reason for refusal</documentTitleEng>
+				<status>발송처리완료</status>
+				<statusEng>Completion of Transmission</statusEng>
+				<step>출원</step>
+				<trialNumber> </trialNumber>
+				<registrationNumber> </registrationNumber>
+				<regReferenceNumber> </regReferenceNumber>
+			</relateddocsonfileInfo>
+			<relateddocsonfileInfo>
+				<applicationNumber>4020240133564</applicationNumber>
+				<appReferenceNumber> </appReferenceNumber>
+				<documentNumber>112024114902782</documentNumber>
+				<documentDate>20241022</documentDate>
+				<documentTitle>[출원서등 보정]보정(보완)서</documentTitle>
+				<documentTitleEng>[Amendment to Application, etc.] Amendment</documentTitleEng>
+				<status>보정승인</status>
+				<statusEng>Acceptance of amendment</statusEng>
+				<step>출원</step>
+				<trialNumber> </trialNumber>
+				<registrationNumber> </registrationNumber>
+				<regReferenceNumber> </regReferenceNumber>
+			</relateddocsonfileInfo>
+			<relateddocsonfileInfo>
+				<applicationNumber>4020240133564</applicationNumber>
+				<appReferenceNumber> </appReferenceNumber>
+				<documentNumber>112024114902827</documentNumber>
+				<documentDate>20241022</documentDate>
+				<documentTitle>[거절이유등 통지에 따른 의견]의견서·답변서·소명서</documentTitle>
+				<documentTitleEng>[Opinion according to the Notification of provisional refusal] Written Opinion·Written Reply·Written Substantiation</documentTitleEng>
+				<status>수리</status>
+				<statusEng>Accepted</statusEng>
+				<step>출원</step>
+				<trialNumber> </trialNumber>
+				<registrationNumber> </registrationNumber>
+				<regReferenceNumber> </regReferenceNumber>
+			</relateddocsonfileInfo>
+			<relateddocsonfileInfo>
+				<applicationNumber>4020240133564</applicationNumber>
+				<appReferenceNumber> </appReferenceNumber>
+				<documentNumber>952024104524615</documentNumber>
+				<documentDate>20241204</documentDate>
+				<documentTitle>출원심사처리보류통지서</documentTitle>
+				<documentTitleEng>Notice of Deferment of Processing of Application Examination</documentTitleEng>
+				<status>발송처리완료</status>
+				<statusEng>Completion of Transmission</statusEng>
+				<step>출원</step>
+				<trialNumber> </trialNumber>
+				<registrationNumber> </registrationNumber>
+				<regReferenceNumber> </regReferenceNumber>
+			</relateddocsonfileInfo>
+			<relateddocsonfileInfo>
+				<applicationNumber>4020240133564</applicationNumber>
+				<appReferenceNumber> </appReferenceNumber>
+				<documentNumber>112025013001848</documentNumber>
+				<documentDate>20250205</documentDate>
+				<documentTitle>[출원인변경]권리관계변경신고서</documentTitle>
+				<documentTitleEng>[Change of Applicant] Report on Change of Proprietary Status</documentTitleEng>
+				<status>수리</status>
+				<statusEng>Accepted</statusEng>
+				<step>출원</step>
+				<trialNumber> </trialNumber>
+				<registrationNumber> </registrationNumber>
+				<regReferenceNumber> </regReferenceNumber>
+			</relateddocsonfileInfo>
+			<relateddocsonfileInfo>
+				<applicationNumber>4020240133564</applicationNumber>
+				<appReferenceNumber> </appReferenceNumber>
+				<documentNumber>112025024842832</documentNumber>
+				<documentDate>20250305</documentDate>
+				<documentTitle>[출원서등 보정]보정(보완)서</documentTitle>
+				<documentTitleEng>[Amendment to Application, etc.] Amendment</documentTitleEng>
+				<status>수리</status>
+				<statusEng>Accepted</statusEng>
+				<step>출원</step>
+				<trialNumber> </trialNumber>
+				<registrationNumber> </registrationNumber>
+				<regReferenceNumber> </regReferenceNumber>
+			</relateddocsonfileInfo>
+			<relateddocsonfileInfo>
+				<applicationNumber>4020240133564</applicationNumber>
+				<appReferenceNumber> </appReferenceNumber>
+				<documentNumber>952026030991703</documentNumber>
+				<documentDate>20260401</documentDate>
+				<documentTitle>출원공고결정서</documentTitle>
+				<documentTitleEng>Written decision on publication of examined application</documentTitleEng>
+				<status>발송처리완료</status>
+				<statusEng>Completion of Transmission</statusEng>
+				<step>출원</step>
+				<trialNumber> </trialNumber>
+				<registrationNumber> </registrationNumber>
+				<regReferenceNumber> </regReferenceNumber>
+			</relateddocsonfileInfo>
+			<relateddocsonfileInfo>
+				<applicationNumber>4020240133564</applicationNumber>
+				<appReferenceNumber> </appReferenceNumber>
+				<documentNumber>952026044317722</documentNumber>
+				<documentDate>20260515</documentDate>
+				<documentTitle>등록결정서</documentTitle>
+				<documentTitleEng>Decision to grant of protection</documentTitleEng>
+				<status>발송처리완료</status>
+				<statusEng>Completion of Transmission</statusEng>
+				<step>출원</step>
+				<trialNumber> </trialNumber>
+				<registrationNumber> </registrationNumber>
+				<regReferenceNumber> </regReferenceNumber>
+			</relateddocsonfileInfo>
+			<relateddocsonfileInfo>
+				<applicationNumber>4020240133564</applicationNumber>
+				<appReferenceNumber> </appReferenceNumber>
+				<documentNumber>212026049347044</documentNumber>
+				<documentDate>20260522</documentDate>
+				<documentTitle>[설정 특허·등록료][상표]납부서</documentTitle>
+				<documentTitleEng>[Patent·Registration Fee] [Trademark] Payment Form</documentTitleEng>
+				<status>수리</status>
+				<statusEng>Accepted</statusEng>
+				<step>등록</step>
+				<trialNumber> </trialNumber>
+				<registrationNumber>4025487260000</registrationNumber>
+				<regReferenceNumber> </regReferenceNumber>
+			</relateddocsonfileInfo>
+		</items>
+	</body>
+</response>

@@ -27,17 +27,18 @@ Built on the official **KIPRIS Plus** open API (Korean Intellectual Property Rig
 
 ## Quick start
 
-> Implementation in progress.
-
 ```bash
 cp .env.example .env          # add your KIPRIS Plus accessKey
-python -m kipris_nol --input testSet.json --out out/
+python -m kipris_nol          # reads testSet.json, writes CSV+JSON to out/
+# or, explicitly:
+python -m kipris_nol --input testSet.json --out-dir out --format both
 ```
+
+No third-party dependencies — standard-library Python only.
 
 ## Status
 
-Proof of concept. The API path is verified and the design is locked; the CLI is being built.
+Proof of concept. The API path is verified, the CLI is implemented, and an end-to-end run over the sample set passes.
 
-- Design — [`docs/specs/`](docs/specs/)
 - API reference — [`docs/index.html`](docs/index.html)
 - KIPRIS Plus — https://plus.kipris.or.kr/
