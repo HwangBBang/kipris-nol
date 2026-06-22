@@ -8,6 +8,9 @@
 # --- gstack tooling/session state ---
 .gstack/
 
+# --- Local-only design docs (never push to remote) ---
+docs/specs/
+
 # --- Python ---
 __pycache__/
 *.py[cod]
