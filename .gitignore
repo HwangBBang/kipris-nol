@@ -1,0 +1,39 @@
+# --- Secrets (NEVER commit) ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# --- gstack tooling/session state ---
+.gstack/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- POC run outputs (regenerated) ---
+out/
+output/
+*.out.csv
+*.out.json
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

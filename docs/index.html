@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KIPRIS 공공데이터 활용 — 기술 레퍼런스</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+:root{
+  --paper:#f4f1e9; --paper-2:#ece7da; --card:#fbf9f4;
+  --ink:#1b1c22; --ink-soft:#3d3f4a; --muted:#6f7180;
+  --line:#d9d2c2; --line-strong:#c3b9a3;
+  --seal:#b5391f;          /* 특허 인장 주색 */
+  --seal-soft:#d8694f;
+  --navy:#1f3a5f;
+  --ok:#2f7d4f; --ok-bg:#e4efe3; --ok-line:#bcd9bd;
+  --warn:#9a6a14; --warn-bg:#f6ecd4; --warn-line:#e3cd9a;
+  --unk:#9a3b3b; --unk-bg:#f3e2df; --unk-line:#e0bdb6;
+  --serif:'Noto Serif KR',serif;
+  --sans:'Pretendard',-apple-system,sans-serif;
+  --mono:'IBM Plex Mono','Pretendard',monospace;
+  --maxw:1000px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans); color:var(--ink); background:var(--paper);
+  line-height:1.7; font-size:16px; letter-spacing:-0.01em;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(circle at 12% -10%, rgba(181,57,31,.05), transparent 40%),
+    radial-gradient(circle at 100% 0%, rgba(31,58,95,.05), transparent 35%);
+  background-attachment:fixed;
+}
+/* subtle paper grain */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.4;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply;
+}
+
+/* ---------- Layout ---------- */
+.wrap{display:grid; grid-template-columns:248px minmax(0,1fr); gap:0; max-width:1320px; margin:0 auto; position:relative; z-index:1}
+aside{
+  position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+  padding:38px 22px 40px 30px; border-right:1px solid var(--line);
+}
+main{padding:0 clamp(20px,5vw,72px) 120px; max-width:calc(var(--maxw) + 144px)}
+
+/* ---------- Sidebar ---------- */
+.brand{font-family:var(--serif); font-weight:900; font-size:20px; letter-spacing:-.02em; line-height:1.25; margin-bottom:4px}
+.brand .x{color:var(--seal)}
+.brand-sub{font-family:var(--mono); font-size:10.5px; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; margin-bottom:26px}
+nav a{
+  display:block; font-size:13.5px; color:var(--ink-soft); text-decoration:none;
+  padding:6.5px 12px; border-radius:7px; border-left:2px solid transparent;
+  transition:all .15s; position:relative;
+}
+nav a .n{font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-right:9px}
+nav a:hover{background:var(--paper-2); color:var(--ink)}
+nav a.active{background:var(--card); color:var(--seal); border-left-color:var(--seal); font-weight:600}
+nav a.active .n{color:var(--seal)}
+.aside-foot{margin-top:30px; padding-top:18px; border-top:1px dashed var(--line-strong); font-size:11px; color:var(--muted); font-family:var(--mono); line-height:1.9}
+
+/* ---------- Hero ---------- */
+.hero{padding:62px 0 38px; border-bottom:2px solid var(--ink)}
+.kicker{display:inline-flex; align-items:center; gap:9px; font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--seal); margin-bottom:20px}
+.kicker::before{content:""; width:26px; height:1.5px; background:var(--seal)}
+h1{font-family:var(--serif); font-weight:900; font-size:clamp(34px,5.4vw,58px); line-height:1.08; letter-spacing:-.03em; margin-bottom:18px}
+h1 em{font-style:normal; color:var(--seal); position:relative}
+.lead{font-size:18px; color:var(--ink-soft); max-width:62ch; line-height:1.65}
+.meta-row{display:flex; flex-wrap:wrap; gap:8px 10px; margin-top:26px}
+.chip{font-family:var(--mono); font-size:11.5px; padding:6px 12px; border:1px solid var(--line-strong); border-radius:100px; color:var(--ink-soft); background:var(--card)}
+.chip b{color:var(--seal)}
+
+/* ---------- Legend ---------- */
+.legend{display:flex; flex-wrap:wrap; gap:10px; margin-top:26px}
+.lg{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; padding:7px 13px; border-radius:8px}
+.lg.ok{background:var(--ok-bg); color:var(--ok); border:1px solid var(--ok-line)}
+.lg.warn{background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn-line)}
+.lg.unk{background:var(--unk-bg); color:var(--unk); border:1px solid var(--unk-line)}
+
+/* ---------- Sections ---------- */
+section{padding:58px 0 8px; scroll-margin-top:24px}
+.sec-head{display:flex; align-items:baseline; gap:16px; margin-bottom:8px}
+.sec-num{font-family:var(--mono); font-size:13px; color:var(--seal); font-weight:600; padding-top:6px}
+h2{font-family:var(--serif); font-weight:700; font-size:clamp(25px,3.4vw,34px); letter-spacing:-.02em; line-height:1.2}
+.sec-desc{color:var(--muted); font-size:15px; margin:4px 0 30px; padding-left:40px; max-width:70ch}
+h3{font-family:var(--serif); font-weight:600; font-size:20px; letter-spacing:-.01em; margin:34px 0 14px; padding-bottom:9px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px}
+h3 .em{font-family:var(--mono); font-size:12px; color:#fff; background:var(--navy); padding:3px 9px; border-radius:6px; font-weight:500}
+h4{font-size:14px; font-weight:700; color:var(--ink-soft); margin:22px 0 10px; letter-spacing:.01em}
+p{margin-bottom:14px; color:var(--ink-soft)}
+strong{color:var(--ink); font-weight:700}
+
+/* ---------- Badges (confidence) ---------- */
+.b{display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:700; font-family:var(--sans); padding:2px 8px; border-radius:5px; white-space:nowrap; vertical-align:middle; letter-spacing:0}
+.b.ok{background:var(--ok-bg); color:var(--ok)}
+.b.warn{background:var(--warn-bg); color:var(--warn)}
+.b.unk{background:var(--unk-bg); color:var(--unk)}
+
+/* ---------- Cards ---------- */
+.cards{display:grid; gap:14px; margin:18px 0}
+.grid-2{grid-template-columns:repeat(2,1fr)} .grid-3{grid-template-columns:repeat(3,1fr)}
+.card{background:var(--card); border:1px solid var(--line); border-radius:13px; padding:20px 22px; position:relative; overflow:hidden}
+.card.accent{border-top:3px solid var(--seal)}
+.card .ct{font-family:var(--serif); font-weight:600; font-size:16.5px; margin-bottom:6px; display:flex; align-items:center; gap:8px}
+.card .cd{font-size:14px; color:var(--muted); line-height:1.6}
+.card .cd b{color:var(--ink-soft)}
+.tag{font-family:var(--mono); font-size:10px; font-weight:600; padding:2px 7px; border-radius:5px; letter-spacing:.03em}
+.tag.api{background:var(--ok-bg); color:var(--ok)}
+.tag.bulk{background:#e7e9 ;color:var(--navy); background:#e3e8ef}
+
+/* ---------- Tables ---------- */
+.tbl-wrap{overflow-x:auto; margin:16px 0; border:1px solid var(--line); border-radius:12px; background:var(--card)}
+table{width:100%; border-collapse:collapse; font-size:13.5px}
+th{font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; text-align:left; color:var(--muted); font-weight:600; padding:13px 16px; border-bottom:2px solid var(--line-strong); background:var(--paper-2); white-space:nowrap}
+td{padding:12px 16px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(181,57,31,.025)}
+td code,.ic{font-family:var(--mono); font-size:12.5px; background:var(--paper-2); padding:1.5px 6px; border-radius:5px; color:var(--navy); white-space:nowrap}
+td b{color:var(--ink)}
+.rt{font-family:var(--mono); font-weight:700; font-size:15px; color:var(--seal)}
+.legacy{font-size:11px; color:var(--muted); font-style:italic}
+
+/* ---------- Number anatomy ---------- */
+.anatomy{background:linear-gradient(160deg,#1b1c22,#23252f); border-radius:18px; padding:42px 32px 34px; margin:8px 0 26px; color:#efe9da; position:relative; overflow:hidden}
+.anatomy::after{content:"KIPO"; position:absolute; right:-8px; bottom:-22px; font-family:var(--serif); font-weight:900; font-size:140px; color:rgba(255,255,255,.03); letter-spacing:-.05em}
+.an-label{font-family:var(--mono); font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--seal-soft); margin-bottom:22px}
+.an-num{display:flex; align-items:flex-end; gap:6px; flex-wrap:wrap; position:relative; z-index:1}
+.seg{display:flex; flex-direction:column; align-items:center; gap:10px}
+.seg .digs{font-family:var(--mono); font-weight:600; font-size:clamp(30px,6vw,52px); letter-spacing:.04em; line-height:1; padding:6px 14px; border-radius:10px}
+.seg.s1 .digs{background:rgba(181,57,31,.22); color:#f0a895; box-shadow:inset 0 0 0 1.5px rgba(216,105,79,.4)}
+.seg.s2 .digs{background:rgba(31,58,95,.4); color:#9fc0e8; box-shadow:inset 0 0 0 1.5px rgba(120,160,210,.4)}
+.seg.s3 .digs{background:rgba(47,125,79,.28); color:#a6dcb5; box-shadow:inset 0 0 0 1.5px rgba(120,200,150,.4)}
+.seg .cap{font-size:12.5px; font-weight:600; color:#d9d2c2}
+.seg .cap span{display:block; font-family:var(--mono); font-size:10.5px; color:#8d8f9c; font-weight:400}
+.dash{font-family:var(--mono); font-size:clamp(28px,5vw,46px); color:#55576a; padding-bottom:30px}
+.an-foot{display:flex; gap:24px; flex-wrap:wrap; margin-top:26px; padding-top:20px; border-top:1px solid rgba(255,255,255,.1); position:relative; z-index:1}
+.an-foot div{font-size:12.5px; color:#b9b3a5}
+.an-foot b{color:#efe9da; font-family:var(--mono)}
+
+/* ---------- Code block ---------- */
+.code{background:#1b1c22; border-radius:12px; padding:18px 20px; margin:14px 0; overflow-x:auto; font-family:var(--mono); font-size:13px; line-height:1.85; color:#cfd3e0}
+.code .c{color:#7d8aa3} .code .k{color:#d8694f} .code .s{color:#a6dcb5} .code .p{color:#e8c07d}
+.code-label{font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:-4px; margin-top:18px; text-transform:uppercase; letter-spacing:.05em}
+
+/* ---------- Callout ---------- */
+.note{display:flex; gap:14px; background:var(--card); border:1px solid var(--line); border-left:3px solid var(--navy); border-radius:10px; padding:16px 18px; margin:16px 0; font-size:14px}
+.note.warn{border-left-color:var(--warn)} .note.danger{border-left-color:var(--seal)}
+.note .ico{font-size:18px; line-height:1.4}
+.note .nt{color:var(--ink-soft)} .note .nt b{color:var(--ink)}
+
+/* ---------- Pipeline ---------- */
+.flow{display:flex; align-items:stretch; gap:0; flex-wrap:wrap; margin:18px 0}
+.flow .st{flex:1; min-width:120px; background:var(--card); border:1px solid var(--line); padding:14px 16px; position:relative}
+.flow .st:first-child{border-radius:10px 0 0 10px} .flow .st:last-child{border-radius:0 10px 10px 0}
+.flow .st .si{font-family:var(--mono); font-size:10.5px; color:var(--seal); font-weight:600}
+.flow .st .sn{font-weight:700; font-size:14px; margin:3px 0 2px; color:var(--ink)}
+.flow .st .sx{font-size:12px; color:var(--muted)}
+
+ul.clean{list-style:none; margin:10px 0}
+ul.clean li{position:relative; padding-left:22px; margin-bottom:9px; font-size:14.5px; color:var(--ink-soft)}
+ul.clean li::before{content:""; position:absolute; left:4px; top:11px; width:6px; height:6px; background:var(--seal); border-radius:2px; transform:rotate(45deg)}
+ul.clean li b{color:var(--ink)}
+
+footer{margin-top:60px; padding-top:30px; border-top:2px solid var(--ink)}
+.src{font-family:var(--mono); font-size:11.5px; color:var(--muted); line-height:2; word-break:break-all}
+.next{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:24px 26px; margin:24px 0}
+.next ol{margin-left:20px; font-size:14.5px; color:var(--ink-soft)} .next li{margin-bottom:8px}
+
+@media(max-width:880px){
+  .wrap{grid-template-columns:1fr}
+  aside{position:static; height:auto; border-right:none; border-bottom:1px solid var(--line); display:none}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .sec-desc{padding-left:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ========== SIDEBAR ========== -->
+<aside>
+  <div class="brand">KIPRIS <span class="x">공공데이터</span><br>활용 레퍼런스</div>
+  <div class="brand-sub">Technical Dossier · 2026.06</div>
+  <nav id="nav">
+    <a href="#overview"><span class="n">00</span>큰 그림</a>
+    <a href="#catalog"><span class="n">01</span>데이터 서비스 50종</a>
+    <a href="#search"><span class="n">02</span>검색·조회 API</a>
+    <a href="#number"><span class="n">03</span>출원번호 규칙</a>
+    <a href="#access"><span class="n">04</span>인증·호출</a>
+    <a href="#next"><span class="n">05</span>다음 단계</a>
+  </nav>
+  <div class="aside-foot">
+    출처: KIPRIS Plus 직접조회<br>+ data.go.kr · WIPO ST.13<br>+ 3인 교차검증<br>
+    운영: 한국특허정보원(KIPI)
+  </div>
+</aside>
+
+<!-- ========== MAIN ========== -->
+<main>
+
+<!-- HERO -->
+<header class="hero" id="top">
+  <div class="kicker">산업재산권 공공데이터 분석</div>
+  <h1>KIPRIS <em>공공 API</em>의 종류와<br>출원번호 체계</h1>
+  <p class="lead">한국 특허·실용·디자인·상표·심판 데이터를 이해하고 활용하기 위한 기술 레퍼런스. 포털 1차 자료 직접 조회와 공식문서 교차검증, 그리고 3인 adversarial 검증으로 사실관계를 확정했다.</p>
+  <div class="meta-row">
+    <span class="chip">데이터 서비스 <b>50종</b></span>
+    <span class="chip">핵심 검색 API <b>7</b></span>
+    <span class="chip">출원번호 <b>13자리</b></span>
+    <span class="chip">검증 에이전트 <b>3인</b></span>
+  </div>
+  <div class="legend">
+    <span class="lg ok">✅ 확정 — 교차검증 일치</span>
+    <span class="lg warn">⚠️ 중간 — 근거 제한적</span>
+    <span class="lg unk">❓ 미확인 — 사용 금지</span>
+  </div>
+</header>
+
+<!-- 00 OVERVIEW -->
+<section id="overview">
+  <div class="sec-head"><span class="sec-num">00</span><h2>큰 그림</h2></div>
+  <p class="sec-desc">무엇을, 어디서, 어떤 형태로 받는가. 세부에 들어가기 전 좌표를 잡는다.</p>
+
+  <div class="cards grid-2">
+    <div class="card accent">
+      <div class="ct">🔎 KIPRIS</div>
+      <div class="cd"><b>kipris.or.kr</b> · 일반 사용자용 <b>무료 검색 웹사이트</b>. 사람이 화면으로 보는 곳.</div>
+    </div>
+    <div class="card accent">
+      <div class="ct">⚙️ KIPRIS Plus</div>
+      <div class="cd"><b>plus.kipris.or.kr</b> · 개발자·기업용 <b>데이터/API 보급</b> 서비스. <b>우리가 쓸 대상.</b></div>
+    </div>
+  </div>
+
+  <h3>API는 두 갈래로 나뉜다</h3>
+  <div class="cards grid-2">
+    <div class="card">
+      <div class="ct">검색·조회 REST API <span class="tag api">앱 개발 주력</span></div>
+      <div class="cd">특허·실용 / 디자인 / 상표 / 심판 정보검색 등. 키워드·번호·항목으로 검색하는 실시간 API. → <b>02번 섹션</b></div>
+    </div>
+    <div class="card">
+      <div class="ct">데이터 서비스 50종</div>
+      <div class="cd">공보·행정·심판·공통·부가·인명·AI학습·해외. 대부분 <b>API+BULK 동시</b> 제공. → <b>01번 섹션</b></div>
+    </div>
+  </div>
+
+  <h3>제공 형태 — API vs BULK</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>형태</th><th>방식</th><th>적합한 작업</th></tr></thead>
+    <tbody>
+      <tr><td><b>API</b> <span class="tag api">실시간</span></td><td>REST GET, 응답 XML</td><td>최신성·소량·온디맨드. 특정 건 조회, 변경 폴링, 실시간 연동</td></tr>
+      <tr><td><b>BULK</b> <span class="tag bulk">대량파일</span></td><td>기간제 / 선택형 파일</td><td>전수분석·자체DB 적재·백필. 인용망, 패밀리, AI 코퍼스</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><span class="ico">🔁</span><div class="nt"><b>표준 패턴:</b> BULK(선택형)로 과거분 일괄 적재 → API로 변경분 실시간 동기화. <b>"BULK로 적재 → API로 최신화."</b></div></div>
+</section>
+
+<!-- 01 CATALOG -->
+<section id="catalog">
+  <div class="sec-head"><span class="sec-num">01</span><h2>데이터 서비스 50종</h2></div>
+  <p class="sec-desc">KIPRIS Plus 포털 AJAX를 직접 조회해 확보한 권위 카탈로그. 권리 생애주기(원천→가공→분석→학습)를 따라 층을 이룬다.</p>
+
+  <h3>분류 체계 <span class="em">포털 직접조회</span></h3>
+  <div class="cards grid-2">
+    <div class="card">
+      <div class="ct">국내 IP데이터</div>
+      <div class="cd"><b>공보</b>(특허·실용/디자인/상표/정정) · <b>행정</b>(+심판/공통) · <b>부가</b>(국내공통/특허·실용/디자인/인명/기타) · <b>AI학습데이터</b>(언어학습)</div>
+    </div>
+    <div class="card">
+      <div class="ct">해외 IP데이터</div>
+      <div class="cd"><b>해외공통</b> · <b>IP5</b>(미국/유럽/중국/일본/WIPO) · <b>기타국</b></div>
+    </div>
+  </div>
+
+  <h3>도메인 그룹별 분석</h3>
+  <div class="cards">
+    <div class="card"><div class="ct">📰 공보 <span class="tag api">원천 1차</span></div><div class="cd">특허청 발행 공식 공보 원문. 권리 <b>발생/변경</b> 공시. <i>신규 출원·등록 모니터링, 자사 DB 피드 적재.</i> (예: 특허·실용 공개·등록공보, 디자인 공보, 상표 출원 속보, 정정공보)</div></div>
+    <div class="card"><div class="ct">📋 행정처리 <span class="tag bulk">절차 가공</span></div><div class="cd">출원~등록~소멸 심사 절차 타임라인. 행정처리 이력·통지서 마감기한·청구항/분류 변동. <i>기한관리(데드라인 알림), 심사상태 대시보드.</i> <b>TM5 공통상태지표</b>는 한·미·유·일·중 표준 상태아이콘.</div></div>
+    <div class="card"><div class="ct">⚖️ 심판</div><div class="cd">특허심판원 단계. 무효·거절불복·권리범위확인·정정 심판의 청구·결과(인용/기각/각하). <i>분쟁 리스크 모니터링, 소송 전 IP 평가.</i></div></div>
+    <div class="card"><div class="ct">🧬 공통 — 법적상태·등록·결정서 <span class="tag api">권종 표준</span></div><div class="cd">권종을 가로질러 표준화한 <b>척추</b> 데이터. <b>법적상태 이력</b>은 WIPO 국제표준 매핑(특허·실용 <code class="ic">ST.27</code>, 디자인 <code class="ic">ST.87</code>) → 권리 생존성(alive/dead) 판정. 등록사항·의견제출통지서·거절/등록결정서·분류코드.</div></div>
+    <div class="card"><div class="ct">🔗 부가 — 인용·패밀리·서열 <span class="tag bulk">분석 파생</span></div><div class="cd">서지에서 한 단계 더 추출. 인용/피인용 네트워크, 패밀리(국가별 대응출원), 염기서열·합금조성비·기탁 미생물. <i>핵심특허 식별, 글로벌 출원전략, 바이오·소재 선행조사.</i></div></div>
+    <div class="card"><div class="ct">👤 인명 — 출원인/권리자</div><div class="cd">출원인·권리자 엔티티 정규화. 명칭 변동·대표 출원인·법인 매칭·권리자 변동·기술분야. <i>동일 출원인 통합(entity resolution), 기업별 포트폴리오 집계.</i></div></div>
+    <div class="card"><div class="ct">📚 기타 — 사전·아이디어</div><div class="cd">보조·사전 데이터. <b>시소러스</b>(동의어 → 검색어 확장으로 재현율↑), 의약품 국제일반명칭(INN), 상표 원산지 명칭, 인터넷 기술공지(방어공개).</div></div>
+    <div class="card"><div class="ct">🤖 AI 학습데이터</div><div class="cd">ML 학습용 정제 코퍼스. 기계번역용 국문초록, 한국특허영문초록(KPA), 특허 중한 코퍼스(병렬말뭉치). <i>특허 NLP·기계번역 모델 학습 — 사실상 BULK 전용.</i></div></div>
+    <div class="card"><div class="ct">🌐 해외 IP데이터 <span class="tag api">실시간 중계</span></div><div class="cd">해외특허/상표/디자인 + 공통. 47~50은 <b>API 전용</b> → 외부 IPO를 실시간 룩업 게이트웨이로 중계하는 구조. <i>글로벌 선행조사, 해외출원 전 FTO.</i></div></div>
+  </div>
+
+  <h3>전체 50건 마스터 테이블 <span class="em">serviceSearch.do</span></h3>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:8px">A = 실시간 API · B = BULK 제공 · 갱신주기 포함</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>#</th><th>서비스명</th><th>영문명</th><th>분류</th><th>제공</th><th>갱신</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><b>특허·실용 공개·등록공보</b></td><td>Patent-Utility Publications</td><td>공보 · 특허·실용</td><td><span class="tag api">A</span></td><td>일</td></tr>
+      <tr><td>2</td><td>특허권 존속기간 연장등록 공보</td><td>Patents (Term Extended)</td><td>공보 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매일</td></tr>
+      <tr><td>3</td><td><b>디자인 공보</b></td><td>Designs</td><td>공보 · 디자인</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매일</td></tr>
+      <tr><td>4</td><td>상표 출원 속보</td><td>Trademark Bulletins</td><td>공보 · 상표</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>일</td></tr>
+      <tr><td>5</td><td>정정공보</td><td>Notice of Amendment</td><td>공보 · 정정</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매월</td></tr>
+      <tr><td>6</td><td>특허·실용 행정처리 이력</td><td>Administrative Procedures (P·U)</td><td>행정 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매일</td></tr>
+      <tr><td>7</td><td>특허·실용 통지서 마감기한</td><td>Due Date of Notice</td><td>행정 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>일</td></tr>
+      <tr><td>8</td><td>청구항 변동 이력</td><td>Changes of Claims</td><td>행정 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매월</td></tr>
+      <tr><td>9</td><td>특허·실용 분류코드 변동 이력</td><td>Changes of Class. Codes (P·U)</td><td>행정 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>월</td></tr>
+      <tr><td>10</td><td>디자인 행정처리 이력</td><td>Administrative Procedures (D)</td><td>행정 · 디자인</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>일</td></tr>
+      <tr><td>11</td><td>디자인 분류코드 변동 이력</td><td>Changes of Class. Codes (D)</td><td>행정 · 디자인</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매월</td></tr>
+      <tr><td>12</td><td>상표 행정처리 이력</td><td>Administrative Procedures (T)</td><td>행정 · 상표</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>일</td></tr>
+      <tr><td>13</td><td>상표 분류코드 변동 이력</td><td>Changes of Class. Codes (T)</td><td>행정 · 상표</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매월</td></tr>
+      <tr><td>14</td><td>TM5 공통상태 지표</td><td>TM5 Common Status Descriptors</td><td>행정 · 상표</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매일</td></tr>
+      <tr><td>15</td><td>심판사항</td><td>Trial Records</td><td>행정 · 심판</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>일</td></tr>
+      <tr><td>16</td><td>법적 상태 이력 (ST.27/ST.87)</td><td>Legal Status</td><td>행정 · 공통</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>주</td></tr>
+      <tr><td>17</td><td>등록사항</td><td>Registration</td><td>행정 · 공통</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>일</td></tr>
+      <tr><td>18</td><td>의견제출통지서</td><td>Notification of Reason for Refusal</td><td>행정 · 공통</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매일</td></tr>
+      <tr><td>19</td><td>거절결정서</td><td>Notification of Refusal</td><td>행정 · 공통</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매일</td></tr>
+      <tr><td>20</td><td>등록결정서</td><td>Notice of Allowance</td><td>행정 · 공통</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매일</td></tr>
+      <tr><td>21</td><td>분류코드</td><td>Standard Classification Code</td><td>행정 · 공통</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>년</td></tr>
+      <tr><td>22</td><td><b>한국특허영문초록 (KPA)</b></td><td>English Abstract of Korean Patent</td><td>부가 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>월</td></tr>
+      <tr><td>23</td><td>기계번역용 국문초록</td><td>Korean Abstracts for MT</td><td>부가 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>-</td></tr>
+      <tr><td>24</td><td>특허·실용 인용문헌</td><td>Cited Patents·Utility</td><td>부가 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매일</td></tr>
+      <tr><td>25</td><td>특허·실용 피인용문헌</td><td>Citing Patents·Utility</td><td>부가 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매일</td></tr>
+      <tr><td>26</td><td>다인용 선행문헌</td><td>Examiner Citations</td><td>부가 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매일</td></tr>
+      <tr><td>27</td><td>특허 패밀리</td><td>Patent Families</td><td>부가 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>월</td></tr>
+      <tr><td>28</td><td>특허 염기서열</td><td>Sequence Listings</td><td>부가 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매월</td></tr>
+      <tr><td>29</td><td>특허 합금조성비</td><td>Composition of Alloys</td><td>부가 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매월</td></tr>
+      <tr><td>30</td><td>특허 기탁 미생물</td><td>Deposit of Microorganism</td><td>부가 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매일</td></tr>
+      <tr><td>31</td><td>국유특허</td><td>Government-owned Patents</td><td>부가 · 특허·실용</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매일</td></tr>
+      <tr><td>32</td><td>디자인맵 형태분류</td><td>Designmap for Shape Search</td><td>부가 · 디자인</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매년</td></tr>
+      <tr><td>33</td><td>출원인 명칭 변동 이력</td><td>Changes of Applicant Names</td><td>부가 · 인명</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매월</td></tr>
+      <tr><td>34</td><td>대표 출원인</td><td>Standard Applicant Names</td><td>부가 · 인명</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>월</td></tr>
+      <tr><td>35</td><td>출원인 법인</td><td>Corporate Applicants</td><td>부가 · 인명</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>분기</td></tr>
+      <tr><td>36</td><td>권리자 변동 이력</td><td>Change History of Korea Right</td><td>부가 · 인명</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>일</td></tr>
+      <tr><td>37</td><td>출원인 기술분야</td><td>Technical Field of Applicant</td><td>부가 · 인명</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매월</td></tr>
+      <tr><td>38</td><td>공모전 아이디어</td><td>Idea DB</td><td>부가 · 기타</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>수시</td></tr>
+      <tr><td>39</td><td>인터넷 기술공지</td><td>Internet Bulletin (Tech)</td><td>부가 · 기타</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매주</td></tr>
+      <tr><td>40</td><td>IP-Biz 하나로 기술분류</td><td>IP-Biz Hanaro Product DB</td><td>부가 · 기타</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>수시</td></tr>
+      <tr><td>41</td><td>상표 원산지 명칭</td><td>Appellation of Origin</td><td>부가 · 기타</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>수시</td></tr>
+      <tr><td>42</td><td>품종보호권 등록 식물 명칭</td><td>Variety</td><td>부가 · 기타</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>년 2회</td></tr>
+      <tr><td>43</td><td>시소러스</td><td>Thesaurus</td><td>부가 · 기타</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>월</td></tr>
+      <tr><td>44</td><td>특허 중한 코퍼스</td><td>Chinese-Korean Corpus</td><td>AI학습 · 언어학습</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>-</td></tr>
+      <tr><td>45</td><td>일본 특허 합금조성비</td><td>JP Composition of Alloys</td><td>해외 · IP5 · 일본</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>매월</td></tr>
+      <tr><td>46</td><td>의약품 국제일반명칭 (INN)</td><td>INN (drug medicine)</td><td>부가 · 기타</td><td><span class="tag api">A</span><span class="tag bulk">B</span></td><td>반기</td></tr>
+      <tr><td>47</td><td>공통</td><td>Common</td><td>부가 · 국내공통</td><td><span class="tag api">A</span></td><td>월</td></tr>
+      <tr><td>48</td><td>해외특허</td><td>International Patents</td><td>해외공통</td><td><span class="tag api">A</span></td><td>월</td></tr>
+      <tr><td>49</td><td>해외디자인</td><td>International Design</td><td>해외공통</td><td><span class="tag api">A</span></td><td>매월</td></tr>
+      <tr><td>50</td><td>해외상표</td><td>International TradeMark</td><td>해외공통</td><td><span class="tag api">A</span></td><td>매월</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 02 SEARCH APIS -->
+<section id="search">
+  <div class="sec-head"><span class="sec-num">02</span><h2>검색·조회 API</h2></div>
+  <p class="sec-desc">개발자가 실제로 가장 많이 호출하는 정보검색 서비스. data.go.kr + KIPRIS Plus + 공개 구현체 교차확인. 4대 권리 = <span class="b ok">확정 high</span></p>
+
+  <div class="note danger"><span class="ico">⚠️</span><div class="nt"><b>철자 함정:</b> 특허 서비스ID는 <code class="ic">patUtltyInfoSearchSevice</code> / <code class="ic">patUtiModInfoSearchSevice</code> — <b>Service</b>가 아니라 <b>Sevice</b>(KIPO 표기 그대로). 교정하면 404.</div></div>
+
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>서비스</th><th>serviceId</th><th>data.go.kr</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td><b>특허·실용신안 정보검색</b> ⭐</td><td><code>patUtltyInfoSearchSevice</code></td><td>15058788</td><td>특허/실용 서지·전문·도면 검색</td></tr>
+      <tr><td>디자인 정보검색</td><td><code>designInfoSearchService</code></td><td>15043970</td><td>서지·6면도·변동</td></tr>
+      <tr><td>상표 정보검색</td><td><code>trademarkInfoSearchService</code></td><td>15043964</td><td>서지·견본·지정상품·비엔나코드</td></tr>
+      <tr><td>심판 정보검색</td><td><code>tribunalInfoSearchService</code></td><td>15065474</td><td>심판사항·심결문</td></tr>
+      <tr><td>한국특허영문초록 KPA <span class="b warn">medium</span></td><td>KPA 검색</td><td>-</td><td>영문 초록·서지</td></tr>
+      <tr><td>등록원부/등록사항 <span class="b warn">medium</span></td><td>registrationInfoSearch</td><td>15124946 / 15058125</td><td>등록번호 → 권리자·연차료·존속기간</td></tr>
+      <tr><td>출원인/대리인 <span class="b warn">medium</span></td><td>applicantNameSearchInfo</td><td>15057851 / 15057547</td><td>출원인 포트폴리오·기술분야</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>특허·실용신안 — 오퍼레이션 <span class="em">가장 핵심</span></h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>operation</th><th>설명</th><th>주요 파라미터</th></tr></thead>
+    <tbody>
+      <tr><td><code>getWordSearch</code></td><td>자유검색(단어)</td><td>word, patent, utility, lastvalue, pageNo, numOfRows, sortSpec</td></tr>
+      <tr><td><code>getAdvancedSearch</code></td><td>항목별 고급검색</td><td>inventionTitle, astrtCont, ipcNumber, applicationNumber, applicant, inventor, applicationDate…</td></tr>
+      <tr><td><code>getNumberSearch</code></td><td>번호검색</td><td>applicationNumber, openNumber, publicationNumber, registerNumber, priorityApplicationNumber</td></tr>
+      <tr><td><code>getBibliographyDetailInfoSearch</code></td><td>출원번호 → 서지 상세</td><td>applicationNumber</td></tr>
+      <tr><td><code>getPubFullTextInfoSearch</code></td><td>공개/공고 전문 경로</td><td>applicationNumber</td></tr>
+      <tr><td><code>getRepresentativeImageInfo</code></td><td>대표도면 이미지 경로</td><td>applicationNumber</td></tr>
+    </tbody>
+  </table></div>
+  <h4>주요 응답 필드</h4>
+  <p style="font-size:13.5px"><code class="ic">applicationNumber</code> <code class="ic">inventionTitle</code> <code class="ic">applicantName</code> <code class="ic">inventorName</code> <code class="ic">applicationDate</code> <code class="ic">openNumber</code> <code class="ic">registerNumber</code> <code class="ic">registerStatus</code> <code class="ic">ipcNumber</code> <code class="ic">astrtCont</code>(초록) <code class="ic">bigDrawing</code>(대표도면 URL)</p>
+
+  <h4>디자인 · 상표 · 심판 공통 오퍼레이션 패턴</h4>
+  <ul class="clean">
+    <li><b>디자인</b>: getWordSearch / getAdvancedSearch(<code class="ic">articleName</code> 물품명, <code class="ic">designClassification</code> 로카르노) / getSixImageInfoSearch(6면도) / getChangeInfoSearch</li>
+    <li><b>상표</b>: getWordSearch / getAdvancedSearch(<code class="ic">trademarkName</code>, <code class="ic">classification</code> 니스, <code class="ic">viennaCode</code>, <code class="ic">similarityCode</code> 유사군) / getTrademarkDesignationGoodstInfo(지정상품) / getSampleImageInfoSearch(견본)</li>
+    <li><b>심판</b>: getWordSearch / getAdvancedSearch(<code class="ic">trialNumber</code>, <code class="ic">trialType</code>) / getTrialDocumentInfo(심결문). 응답: claimPurport(청구취지), decisionText(심결주문), confirmResult(확정결과)</li>
+  </ul>
+</section>
+
+<!-- 03 NUMBER -->
+<section id="number">
+  <div class="sec-head"><span class="sec-num">03</span><h2>출원번호 규칙</h2></div>
+  <p class="sec-desc">핵심 구조와 기본 권리구분코드는 3인 독립 검증(공식고시·실제사례·반증시도)으로 교차 확인. <span class="b ok">확정</span></p>
+
+  <div class="anatomy">
+    <div class="an-label">Application Number · 총 13자리</div>
+    <div class="an-num">
+      <div class="seg s1"><div class="digs">10</div><div class="cap">권리구분<span>2자리 · 권종</span></div></div>
+      <div class="dash">-</div>
+      <div class="seg s2"><div class="digs">2020</div><div class="cap">출원연도<span>4자리 · 서기</span></div></div>
+      <div class="dash">-</div>
+      <div class="seg s3"><div class="digs">0012345</div><div class="cap">일련번호<span>7자리 · 연번</span></div></div>
+    </div>
+    <div class="an-foot">
+      <div>표시형 <b>XX-YYYY-NNNNNNN</b></div>
+      <div>저장/전송형 <b>1020200012345</b> (하이픈 제거)</div>
+      <div>영문 <b>KR1020130074261</b></div>
+    </div>
+  </div>
+
+  <div class="note"><span class="ico">📐</span><div class="nt"><b>WIPO ST.13 표준과의 관계:</b> 표준은 일련번호 9자리(총 15자)를 권고하나, 한국은 <b>일련번호 7자리(총 13자리)</b>로 운용 → <b>"부분 준수"</b>. KIPO가 CWS 설문에 직접 명시: <i>"we use seven digits for serial number."</i> 13자리는 한국 실제값, 15자리는 표준 권고값.</div></div>
+
+  <h3>권리구분코드 (앞 2자리)</h3>
+  <h4><span class="b ok">✅ 확정</span> — 기본 4종 · 3인 검증 일치 + 실제사례 역검증</h4>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>코드</th><th>권리</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr><td><span class="rt">10</span></td><td><b>특허</b> Patent</td><td>예: 10-2010-0098457</td></tr>
+      <tr><td><span class="rt">20</span></td><td><b>실용신안</b> Utility Model</td><td></td></tr>
+      <tr><td><span class="rt">30</span></td><td><b>디자인</b> Design</td><td>구 명칭 '의장' (2005 디자인보호법)</td></tr>
+      <tr><td><span class="rt">40</span></td><td><b>상표</b> Trademark</td><td>2016.9.1 개정으로 서비스표·상표서비스표를 40으로 <b>통합</b></td></tr>
+    </tbody>
+  </table></div>
+
+  <h4><span class="b warn">⚠️ 중간</span> — 상표 세부 권리구분 (권리는 실재, 숫자 매핑 근거 제한적)</h4>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>코드</th><th>권리</th><th>현행성</th></tr></thead>
+    <tbody>
+      <tr><td><span class="rt" style="color:var(--warn)">41</span></td><td>(구) 서비스표</td><td><span class="legacy">레거시 — 2016.9.1 이후 40 통합, 신규부여 중단</span></td></tr>
+      <tr><td><span class="rt" style="color:var(--warn)">42</span></td><td>업무표장</td><td>국가·지자체·공공기관 전용</td></tr>
+      <tr><td><span class="rt" style="color:var(--warn)">43</span></td><td>단체표장</td><td></td></tr>
+      <tr><td><span class="rt" style="color:var(--warn)">44</span></td><td>지리적표시 단체표장</td><td></td></tr>
+      <tr><td><span class="rt" style="color:var(--warn)">45</span></td><td>(구) 상표·서비스표</td><td><span class="legacy">레거시 — 상품류+서비스류 동시지정, 40 통합</span></td></tr>
+      <tr><td><span class="rt" style="color:var(--warn)">47</span></td><td>증명표장</td><td></td></tr>
+      <tr><td><span class="rt" style="color:var(--warn)">48</span></td><td>지리적표시 증명표장</td><td></td></tr>
+    </tbody>
+  </table></div>
+
+  <h4><span class="b unk">❓ 미확인</span> — 단정 금지 · 3인 검증 모두 근거 못 찾음</h4>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>코드</th><th>떠도는 주장</th><th>검증 결과</th></tr></thead>
+    <tbody>
+      <tr><td><span class="rt" style="color:var(--unk)">11</span></td><td>PCT 국내단계 특허</td><td>WIPO 권고코드이나 <b>한국 실제 부여 미확인</b>. PCT 국내진입은 통상 <b>10</b></td></tr>
+      <tr><td><span class="rt" style="color:var(--unk)">21</span></td><td>PCT 국내단계 실용신안</td><td>동일하게 미확인. 통상 <b>20</b> 체계</td></tr>
+      <tr><td><span class="rt" style="color:var(--unk)">49</span></td><td>마드리드 국제등록상표</td><td><b>근거 없음.</b> 마드리드는 별도 WIPO IR 번호 체계 → 한국 13자리와 무관</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note danger"><span class="ico">🚫</span><div class="nt">위 3개(11·21·49)는 어떤 공식·이차 출처로도 확인되지 않았다. <b>코드로 사용하지 말 것.</b></div></div>
+
+  <h3>관련 번호 체계</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>번호</th><th>구조</th><th>예시</th></tr></thead>
+    <tbody>
+      <tr><td><b>등록번호</b></td><td>권리구분(2) + 등록 일련번호(7). 연도부 미사용</td><td><code>10-1234567</code> 특허등록 제1234567호</td></tr>
+      <tr><td><b>공개번호</b></td><td>권리구분(2) + <b>공개연도</b>(4) + 일련번호(7)</td><td><code>10-2020-0123456</code> 출원 18개월 후</td></tr>
+      <tr><td><b>공고번호</b></td><td>권리구분(2) + 연도(4) + 일련번호(7)</td><td><code>10-1995-0012345</code> 구 등록공고</td></tr>
+      <tr><td><b>우선권주장번호</b></td><td>국내=기초 한국 출원번호 / 조약=제1국 형식</td><td>국내 10-2019-0001234 · 해외 US 16/123,456</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>국제출원 번호</h3>
+  <ul class="clean">
+    <li><b>PCT 국제출원번호</b> — <code class="ic">PCT/KR2020/000001</code> (수리관청 KR + 연도4 + 일련6)</li>
+    <li><b>PCT 국제공개번호(WO)</b> — <code class="ic">WO 2020/045678</code></li>
+    <li><b>마드리드 국제등록번호(상표)</b> — <code class="ic">IR 1234567</code> · WIPO 부여, 한국 13자리와 별개</li>
+  </ul>
+  <div class="note warn"><span class="ico">↔️</span><div class="nt"><b>혼동 주의:</b> <code class="ic">DM/NNNNNN</code>은 <b>헤이그(산업디자인)</b> 국제등록 표기로, 마드리드(상표)와 다른 제도다.</div></div>
+</section>
+
+<!-- 04 ACCESS -->
+<section id="access">
+  <div class="sec-head"><span class="sec-num">04</span><h2>인증·호출</h2></div>
+  <p class="sec-desc">같은 KIPRIS 데이터라도 어디서 키를 받았는지에 따라 키 종류·파라미터명·베이스 URL이 다르다.</p>
+
+  <div class="cards grid-2">
+    <div class="card accent">
+      <div class="ct">📥 공공데이터포털 <span class="tag api">무료·쉬움</span></div>
+      <div class="cd"><b>data.go.kr</b> · 데이터셋별 활용신청(다수 자동승인, 즉시) · 키 = <code class="ic">serviceKey</code> (Encoding/Decoding 2종) · 프로토타입·소량에 적합</div>
+    </div>
+    <div class="card accent">
+      <div class="ct">🏛️ KIPRIS Plus <span class="tag bulk">전체·대량</span></div>
+      <div class="cd"><b>plus.kipris.or.kr</b> · 회원가입→서비스 신청→승인(1~2일) · 키 = <code class="ic">accessKey</code> · 무료+유료+BULK 전체. 상용·대량 연동</div>
+    </div>
+  </div>
+  <div class="note"><span class="ico">🔑</span><div class="nt">data.go.kr = KIPRIS Plus 무료분 일부를 쉽게 노출한 창구. KIPRIS Plus = 슈퍼셋. <b>코드에서 키 분기 필요.</b></div></div>
+
+  <div class="code-label">KIPRIS Plus 호출 예시 (accessKey · 검증된 실제 엔드포인트)</div>
+  <div class="code"><span class="c"># 출원번호 검색</span>
+http://plus.kipris.or.kr/openapi/rest/<span class="k">patUtiModInfoSearchSevice</span>/applicationNumberSearchInfo
+  ?<span class="p">applicationNumber</span>=<span class="s">1020200012345</span>&patent=true&utility=true
+  &docsStart=1&docsCount=10&sortSpec=AD&<span class="p">accessKey</span>=<span class="s">발급키</span>
+
+<span class="c"># 자유검색</span>
+http://plus.kipris.or.kr/openapi/rest/<span class="k">patUtiModInfoSearchSevice</span>/freeSearchInfo
+  ?<span class="p">word</span>=<span class="s">드론</span>&patent=true&pageNo=1&numOfRows=10&<span class="p">accessKey</span>=<span class="s">발급키</span></div>
+
+  <div class="code-label">data.go.kr 호출 예시 (serviceKey)</div>
+  <div class="code">http://apis.data.go.kr/.../서비스명?<span class="p">serviceKey</span>=<span class="s">인코딩된키</span>
+  &numOfRows=10&pageNo=1&<span class="p">applicationNumber</span>=<span class="s">1020200012345</span></div>
+
+  <h3>응답 포맷 & 상태코드</h3>
+  <p>기본 <b>XML</b> — <code class="ic">response &gt; header(resultCode/resultMsg) &gt; body &gt; items &gt; item</code>. JSON은 서비스별 지원 여부를 명세서에서 개별 확인(KIPRIS 계열은 XML이 사실상 기본). 페이징 <code class="ic">pageNo</code>/<code class="ic">numOfRows</code> 또는 <code class="ic">docsStart</code>/<code class="ic">docsCount</code>.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>resultCode</th><th>의미</th></tr></thead>
+    <tbody>
+      <tr><td><code>00</code></td><td>정상</td></tr>
+      <tr><td><code>10</code></td><td>요청 파라미터 오류</td></tr>
+      <tr><td><code>20</code></td><td>결과 없음 — <b>에러 아님</b>, 빈 배열 방어처리</td></tr>
+      <tr><td><code>30</code></td><td>accessKey 미등록</td></tr>
+      <tr><td><code>31</code></td><td>사용기한 만료</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>요금</h3>
+  <ul class="clean">
+    <li><b>무료</b> — 월 <b>1,000회</b> (data.go.kr 또는 KIPRIS Plus 무료 신청)</li>
+    <li><b>유료 Open API</b> — 1상품 일 5,320원 × 365 ≈ <b>연 194만원</b> (일 단위 기간 지정 가능)</li>
+    <li>2종 이하 신청 <b>50% 할인</b> · 개인·중소기업·공공·비영리 추가 <b>50% 할인</b>(중복 가능)</li>
+  </ul>
+
+  <h3>실무 함정 ⚠️</h3>
+  <ul class="clean">
+    <li><b>출원번호 하이픈 제거</b> — <code class="ic">10-2020-0012345</code> → <code class="ic">1020200012345</code>로 전달. 응답은 하이픈 포함 가능 → 표시/검색 분리.</li>
+    <li><b>serviceKey 이중 인코딩</b> (data.go.kr 최다 오류 <code class="ic">SERVICE_KEY_IS_NOT_REGISTERED_ERROR</code>) — Encoding 키의 <code class="ic">%2B</code>를 URL 빌더가 <code class="ic">%25</code>로 재인코딩하면 깨짐. 해결: <code class="ic">URI</code> 객체로 직접 구성(<code class="ic">build(true).toUri()</code>).</li>
+    <li><b>엔드포인트 철자</b> — <code class="ic">patUtiModInfoSearchSevice</code> (Service 아님, Sevice) 그대로.</li>
+    <li><b>일자 포맷</b> — <code class="ic">YYYYMMDD</code> 8자리, 구분자 없음.</li>
+    <li><b>HTTP/HTTPS</b> — KIPRIS Plus 직접은 http 예시가 흔함. 운영 전 https 확인.</li>
+  </ul>
+</section>
+
+<!-- 05 NEXT -->
+<section id="next">
+  <div class="sec-head"><span class="sec-num">05</span><h2>다음 단계</h2></div>
+  <div class="next">
+    <ol>
+      <li>data.go.kr에서 <b>특허실용신안 정보검색(15058788)</b> 활용신청 → <code class="ic">getWordSearch</code> 1건 호출 테스트</li>
+      <li>응답 XML 구조 확정 후 파서/모델 설계</li>
+      <li>필요 데이터 도메인 확정 → <b>BULK vs API</b> 결정 (BULK로 적재 → API로 최신화)</li>
+      <li>상표 세부코드·번호 전환시점은 KIPRIS Plus <b>API 통합설명서</b> 신청분으로 최종 확정</li>
+    </ol>
+  </div>
+
+  <footer>
+    <h4>검증 신뢰도 요약</h4>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>항목</th><th>신뢰도</th></tr></thead>
+      <tbody>
+        <tr><td>데이터 서비스 50건 카탈로그·분류</td><td><span class="b ok">✅ 포털 직접조회</span></td></tr>
+        <tr><td>4대 검색 API 엔드포인트·오퍼레이션</td><td><span class="b ok">✅ high · 교차확인</span></td></tr>
+        <tr><td>출원번호 13자리 + 코드 10/20/30/40</td><td><span class="b ok">✅ 3인 검증 일치</span></td></tr>
+        <tr><td>상표 세부코드 41~48</td><td><span class="b warn">⚠️ 권리 실재, 매핑 medium</span></td></tr>
+        <tr><td>코드 11/21/49 · 구→현 전환시점</td><td><span class="b unk">❓ 미확인</span></td></tr>
+      </tbody>
+    </table></div>
+    <h4 style="margin-top:24px">출처</h4>
+    <div class="src">
+      KIPRIS Plus 포털 직접조회 (serviceSearch.do · apiAjaxClas1.do)<br>
+      data.go.kr 15058788 / 15043970 / 15043964 / 15065474<br>
+      WIPO ST.13 · CWS 현행번호체계 설문 (KR = Partly compliant)<br>
+      easylaw.go.kr · KIPO kpoContentView · LexisNexis IP · eurekapat · kiyul.co.kr<br>
+      공개 구현체 github.com/nuri428/mcp_kipris · github.com/seheeopark/kipris_rcode
+    </div>
+    <div class="src" style="margin-top:18px;color:var(--line-strong)">— 작성 2026.06.21 · 운영기관 한국특허정보원(KIPI) · 데이터 출처 지식재산처(특허청) —</div>
+  </footer>
+</section>
+
+</main>
+</div>
+
+<script>
+// scrollspy
+const links=[...document.querySelectorAll('#nav a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+const obs=new IntersectionObserver((es)=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      const id='#'+e.target.id;
+      links.forEach(l=>l.classList.toggle('active', l.getAttribute('href')===id));
+    }
+  });
+},{rootMargin:'-20% 0px -70% 0px'});
+secs.forEach(s=>s&&obs.observe(s));
+</script>
+</body>
+</html>
