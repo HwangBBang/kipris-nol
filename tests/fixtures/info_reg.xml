@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+
+
+<response>
+	<header>
+		<resultCode></resultCode>
+		<resultMsg></resultMsg>
+	</header>
+	<body>
+		<items>
+			<TotalSearchCount>1</TotalSearchCount>
+			<TradeMarkInfo>
+				<SerialNumber>1</SerialNumber>
+				<ApplicationNumber>4020240133564</ApplicationNumber>
+				<AppReferenceNumber> </AppReferenceNumber>
+				<ApplicationDate>20240719</ApplicationDate>
+				<PublicNumber>4020260050731</PublicNumber>
+				<PublicDate>20260403</PublicDate>
+				<RegistrationPublicNumber>4020260067147</RegistrationPublicNumber>
+				<RegistrationPublicDate>20260528</RegistrationPublicDate>
+				<RegistrationNumber>4025487260000</RegistrationNumber>
+				<RegReferenceNumber> </RegReferenceNumber>
+				<RegistrationDate>20260522</RegistrationDate>
+				<PriorityClaimNumber></PriorityClaimNumber>
+				<PriorityClaimDate></PriorityClaimDate>
+				<InternationalRegisterNumber> </InternationalRegisterNumber>
+				<InternationalRegisterDate> </InternationalRegisterDate>
+				<ApplicationStatus>등록</ApplicationStatus>
+				<GoodClassificationCode>09</GoodClassificationCode>
+				<ViennaCode></ViennaCode>
+				<ApplicantName>주식회사 놀유니버스</ApplicantName>
+				<AgentName>특허법인로율</AgentName>
+				<RegistrationRightholderName>주식회사 놀유니버스 Nol Universe Co, Ltd</RegistrationRightholderName>
+				<Title>NOL</Title>
+				<FulltextExistFlag>Y</FulltextExistFlag>
+				<ImagePath>http://plus.kipris.or.kr/openapi/fileToss.jsp?arg=ed43a0609e94d6e251697a9d72a91344ab46dd62dcdb3b50d6706cad9e2b34f99e21d6eb7b0677e1ce1d6e2386d20edd1c4d8bccebd09755</ImagePath>
+				<ThumbnailPath>http://plus.kipris.or.kr/openapi/fileToss.jsp?arg=ad7a17eeeef6e4ea4b5e22ef00dd3e29a04489ad4cba26e5bef8a87f668a7b8b404b30c85981f69a1bda45ac920ee5be4cc5598eb7816ebb</ThumbnailPath>
+			</TradeMarkInfo>
+		</items>
+	</body>
+</response>

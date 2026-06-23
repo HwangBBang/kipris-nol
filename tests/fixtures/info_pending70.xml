@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+
+
+<response>
+	<header>
+		<resultCode></resultCode>
+		<resultMsg></resultMsg>
+	</header>
+	<body>
+		<items>
+			<TotalSearchCount>1</TotalSearchCount>
+			<TradeMarkInfo>
+				<SerialNumber>1</SerialNumber>
+				<ApplicationNumber>7020240001232</ApplicationNumber>
+				<AppReferenceNumber> </AppReferenceNumber>
+				<ApplicationDate>20240814</ApplicationDate>
+				<PublicNumber></PublicNumber>
+				<PublicDate></PublicDate>
+				<RegistrationPublicNumber></RegistrationPublicNumber>
+				<RegistrationPublicDate></RegistrationPublicDate>
+				<RegistrationNumber></RegistrationNumber>
+				<RegReferenceNumber> </RegReferenceNumber>
+				<RegistrationDate></RegistrationDate>
+				<PriorityClaimNumber></PriorityClaimNumber>
+				<PriorityClaimDate></PriorityClaimDate>
+				<InternationalRegisterNumber> </InternationalRegisterNumber>
+				<InternationalRegisterDate> </InternationalRegisterDate>
+				<ApplicationStatus>출원</ApplicationStatus>
+				<GoodClassificationCode>41</GoodClassificationCode>
+				<ViennaCode></ViennaCode>
+				<ApplicantName>주식회사 놀유니버스</ApplicantName>
+				<AgentName>특허법인로율</AgentName>
+				<RegistrationRightholderName></RegistrationRightholderName>
+				<Title>NOL</Title>
+				<FulltextExistFlag>N</FulltextExistFlag>
+				<ImagePath>http://plus.kipris.or.kr/openapi/fileToss.jsp?arg=ed43a0609e94d6e27c083fadcfb0583f7d49c4d3f267c5bea3fba817545d1da5b57c5fae3848c5082c162a2a792fba077e16317712ed60f2</ImagePath>
+				<ThumbnailPath>http://plus.kipris.or.kr/openapi/fileToss.jsp?arg=ad7a17eeeef6e4ea121eed0dee9114aa1771a8061f1f43a1fe9e22c7c6ca83c126e8ece040d8c97ab210508b3fd03f5bd0c845c1d2606557</ThumbnailPath>
+			</TradeMarkInfo>
+		</items>
+	</body>
+</response>

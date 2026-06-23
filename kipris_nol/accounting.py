@@ -1,0 +1,191 @@
+"""회계 분류 — 법적상태 → 버킷·계정, B-모드 상태 도출, 자산대장 행/집계.
+
+설계 Approach C(하이브리드)의 공통 레이어 + B-모드(정보검색 미접근 시 보수 분류).
+규칙: [[kipris-accounting-rules]]. **오분류 0 원칙 — 확신 없으면 '검토필요'.**
+정보검색(trademarkInfoSearchService) 승인 후 derive 함수만 C용으로 교체하면 됨.
+"""
+from __future__ import annotations
+
+import csv
+import json
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+from . import config
+
+# 자산대장 출력 필드(실무자 확정 필수항목 + 판정 근거). raw_items는 CSV 제외(JSON 감사용).
+LEDGER_FIELDS = [
+    "application_number",   # 출원번호
+    "right_code",           # 권리구분 코드(40/70/...)
+    "right_label",          # 권리구분(상표/특허)
+    "registration_number",  # 등록번호
+    "mark_name",            # 상표명/발명명칭 (B-모드에선 미확보 → C/정보검색 필요)
+    "recognition_date",     # 자산화 인식일(=등록일; 등록 확정 시에만)
+    "acquisition_cost",     # 취득원가(=cost, 부가세 불포함)
+    "asset_status",         # 자산상태: 등록/대기/탈락/검토필요/unsupported
+    "account",              # 회계계정: 상표권·특허권 / 건설중인자산(무형) / 지급수수료
+    "legal_state",          # 표준 법적상태
+    "basis",                # 판정 근거(감사 추적)
+    "source_mode",          # 상태 출처: B(이력추론) / C(정보검색+교차검증)
+    "queried_at",
+    "result_code",
+    "result_msg",
+]
+
+
+# --------------------------------------------------------------------------- #
+# cost 검증 — 누락·비수치·0/음수 → None(→ 검토필요, 합계에 0으로 묻지 않음)
+# --------------------------------------------------------------------------- #
+def parse_cost(raw) -> float | None:
+    if raw is None or isinstance(raw, bool):
+        return None
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return None
+    return value if value > 0 else None
+
+
+# --------------------------------------------------------------------------- #
+# B-모드: 행정처리 이력 이벤트 → 보수적 표준 법적상태
+# 등록은 B로 확정 불가 → '검토필요'. 명백 취하/포기만 탈락(안전 방향). 거절/무효는 불복 불명 → 검토필요.
+# --------------------------------------------------------------------------- #
+_WITHDRAW_KW = ("취하", "포기")
+_REGISTER_KW = ("설정등록", "등록결정", "등록사정", "등록료")
+_REJECT_KW = ("거절결정", "각하", "무효")
+
+
+def derive_legal_state_b_mode(items: list[dict]) -> tuple[str, str]:
+    """행정처리 이력 → (legal_state, basis). C 전환 시 이 함수만 교체."""
+    if not items:
+        return "검토필요", "행정처리 이력 없음"
+    titles = [(it.get("documentTitle") or "").strip() for it in items]
+
+    for t in titles:  # 1) 명백 취하/포기 → 탈락(안전 방향, 위험 비대칭)
+        if any(k in t for k in _WITHDRAW_KW):
+            return ("취하" if "취하" in t else "포기"), f"이력 '{t}'"
+
+    has_reg_no = any((it.get("registrationNumber") or "").strip() for it in items)
+    reg_hit = next((t for t in titles if any(k in t for k in _REGISTER_KW)), None)
+    if has_reg_no or reg_hit:  # 2) 등록 신호 → B로는 확정 불가 → 검토필요
+        why = "등록번호 부여됨" if has_reg_no else f"등록 문서 '{reg_hit}'"
+        return "검토필요", f"{why} — 정보검색 미접근으로 '등록' 확정 불가(B-모드)"
+
+    rej = next((t for t in titles if any(k in t for k in _REJECT_KW)), None)
+    if rej:  # 3) 거절/무효 신호 → 불복 여부 불명 → 검토필요
+        return "검토필요", f"거절/무효 신호 '{rej}' — 확정 여부 불명(B-모드)"
+
+    return "심사중", f"진행 이벤트 {len(items)}건(최근 '{titles[-1]}')"  # 4) 진행중 → 대기
+
+
+# --------------------------------------------------------------------------- #
+# C-모드: 상표 정보검색(trademarkInfoSearchService) → 확정 행정상태
+# --------------------------------------------------------------------------- #
+def parse_trademark_info(xml_text: str) -> dict:
+    """정보검색 응답 → {result_code, result_msg, info}. info=TradeMarkInfo 필드 dict 또는 None."""
+    root = ET.fromstring(xml_text)
+    rc = (root.findtext(".//resultCode") or "").strip()
+    rm = (root.findtext(".//resultMsg") or "").strip()
+    tm = root.find(".//TradeMarkInfo")
+    info = None if tm is None else {child.tag: (child.text or "").strip() for child in tm}
+    return {"result_code": rc, "result_msg": rm, "info": info}
+
+
+def derive_legal_state_c_mode(info: dict) -> tuple[str, str, str, str, str]:
+    """정보검색 TradeMarkInfo → (legal_state, basis, mark_name, reg_no, reg_date).
+
+    ApplicationStatus를 표준 법적상태로 매핑. 미수록 값 → 검토필요.
+    '등록'인데 등록번호/등록일이 없으면 일관성 위반 → 검토필요(오분류 0).
+    """
+    status = (info.get("ApplicationStatus") or "").strip()
+    mark = (info.get("Title") or "").strip()
+    reg_no = (info.get("RegistrationNumber") or "").strip()
+    reg_date = (info.get("RegistrationDate") or "").strip()
+    state = config.APPLICATION_STATUS_MAP.get(status)
+    if state is None:
+        return "검토필요", f"미수록 ApplicationStatus '{status}'", mark, reg_no, reg_date
+    if state == "등록" and not (reg_no and reg_date):
+        return "검토필요", "ApplicationStatus=등록이나 등록번호/등록일 누락(일관성 위반)", mark, reg_no, reg_date
+    return state, f"정보검색 ApplicationStatus='{status}'", mark, reg_no, reg_date
+
+
+# --------------------------------------------------------------------------- #
+# 법적상태 → 버킷·계정
+# --------------------------------------------------------------------------- #
+def classify(right_code: str, legal_state: str) -> tuple[str, str, str]:
+    """(bucket, account, right_label). 범위 밖 권리구분 → unsupported, 미매핑 상태 → 검토필요."""
+    info = config.RIGHT_CODE_INFO.get(right_code)
+    if info is None:
+        return (*config.UNSUPPORTED_BUCKET, "")
+    rule = config.BUCKET_RULES.get(legal_state)
+    if rule is None:
+        return (*config.REVIEW_BUCKET, info["label"])
+    bucket, account = rule
+    if account == "자산":  # 등록 → 권리구분별 자산계정
+        account = info["asset_account"]
+    return bucket, account, info["label"]
+
+
+def latest_reg_no(items: list[dict]) -> str:
+    for it in reversed(items or []):
+        rn = (it.get("registrationNumber") or "").strip()
+        if rn:
+            return rn
+    return ""
+
+
+# --------------------------------------------------------------------------- #
+# 자산대장 행 생성 (cost 무효 시 검토필요로 격리)
+# --------------------------------------------------------------------------- #
+def build_row(*, appno, right_code, cost_raw, legal_state, basis, right_label,
+              bucket, account, reg_no="", mark_name="", recognition_date="",
+              source_mode="B", queried_at="", result_code="", result_msg="") -> dict:
+    cost = parse_cost(cost_raw)
+    if cost is None:  # cost 무효 → 검토필요(합계 오염 방지)
+        bucket, account = config.REVIEW_BUCKET
+        basis = (basis + " | " if basis else "") + f"cost 무효({cost_raw!r}) → 검토필요"
+    return {
+        "application_number": appno,
+        "right_code": right_code,
+        "right_label": right_label,
+        "registration_number": reg_no,
+        "mark_name": mark_name,
+        "recognition_date": recognition_date,
+        "acquisition_cost": cost if cost is not None else "",
+        "asset_status": bucket,
+        "account": account,
+        "legal_state": legal_state,
+        "basis": basis,
+        "source_mode": source_mode,
+        "queried_at": queried_at,
+        "result_code": result_code,
+        "result_msg": result_msg,
+    }
+
+
+def summarize(rows: list[dict]) -> dict:
+    """버킷별 건수 + 유효 cost 합계."""
+    sums: dict[str, dict] = {}
+    for r in rows:
+        b = r["asset_status"]
+        agg = sums.setdefault(b, {"count": 0, "cost_sum": 0.0})
+        agg["count"] += 1
+        c = r["acquisition_cost"]
+        if isinstance(c, (int, float)):
+            agg["cost_sum"] += c
+    return sums
+
+
+# --------------------------------------------------------------------------- #
+# 출력
+# --------------------------------------------------------------------------- #
+def write_ledger_json(rows: list[dict], path: Path | str) -> None:
+    Path(path).write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def write_ledger_csv(rows: list[dict], path: Path | str) -> None:
+    with Path(path).open("w", encoding="utf-8-sig", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=LEDGER_FIELDS, extrasaction="ignore")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)  # raw_items 등 추가 키는 extrasaction='ignore'로 자동 제외

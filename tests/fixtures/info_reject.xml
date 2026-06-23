@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+
+
+<response>
+	<header>
+		<resultCode></resultCode>
+		<resultMsg></resultMsg>
+	</header>
+	<body>
+		<items>
+			<TotalSearchCount>1</TotalSearchCount>
+			<TradeMarkInfo>
+				<SerialNumber>1</SerialNumber>
+				<ApplicationNumber>4020230205658</ApplicationNumber>
+				<AppReferenceNumber> </AppReferenceNumber>
+				<ApplicationDate>20231114</ApplicationDate>
+				<PublicNumber></PublicNumber>
+				<PublicDate></PublicDate>
+				<RegistrationPublicNumber></RegistrationPublicNumber>
+				<RegistrationPublicDate></RegistrationPublicDate>
+				<RegistrationNumber></RegistrationNumber>
+				<RegReferenceNumber> </RegReferenceNumber>
+				<RegistrationDate></RegistrationDate>
+				<PriorityClaimNumber></PriorityClaimNumber>
+				<PriorityClaimDate></PriorityClaimDate>
+				<InternationalRegisterNumber> </InternationalRegisterNumber>
+				<InternationalRegisterDate> </InternationalRegisterDate>
+				<ApplicationStatus>거절</ApplicationStatus>
+				<GoodClassificationCode>35</GoodClassificationCode>
+				<ViennaCode></ViennaCode>
+				<ApplicantName>이아람</ApplicantName>
+				<AgentName>김정한</AgentName>
+				<RegistrationRightholderName></RegistrationRightholderName>
+				<Title>NOL</Title>
+				<FulltextExistFlag>N</FulltextExistFlag>
+				<ImagePath>http://plus.kipris.or.kr/openapi/fileToss.jsp?arg=ed43a0609e94d6e251697a9d72a913440be47db3b03c4b73d043f74882bc1fa2793a3ef649709c387ae397d639ace9e636d3c0d02a2efa31</ImagePath>
+				<ThumbnailPath>http://plus.kipris.or.kr/openapi/fileToss.jsp?arg=ad7a17eeeef6e4ea4b5e22ef00dd3e2991ba5d9d09407d4b97247aa0ed218b4e33b37d7900bbee12280a6eea5c3d6d4e53a788035debdecb</ThumbnailPath>
+			</TradeMarkInfo>
+		</items>
+	</body>
+</response>

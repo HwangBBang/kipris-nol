@@ -44,6 +44,22 @@ def load_input(path: Path | str) -> list[str]:
     return numbers
 
 
+def load_entries(path: Path | str) -> list[dict]:
+    """testSet 배열 JSON → [{application_number, cost(raw)}]. cost는 취득원가 산정용으로 보존."""
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(data, list):
+        raise ValueError("testSet must be a JSON array of {applicationNumber, cost}")
+    entries: list[dict] = []
+    for i, row in enumerate(data):
+        if not isinstance(row, dict) or "applicationNumber" not in row:
+            raise ValueError(f"entry {i} missing 'applicationNumber'")
+        entries.append({
+            "application_number": str(row["applicationNumber"]).strip(),
+            "cost": row.get("cost"),  # 검증은 accounting.parse_cost 에서(누락·비수치·0 → 검토필요)
+        })
+    return entries
+
+
 # --------------------------------------------------------------------------- #
 # 분류
 # --------------------------------------------------------------------------- #
