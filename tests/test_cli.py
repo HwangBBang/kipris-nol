@@ -219,5 +219,17 @@ class TestPatentFailSafe(unittest.TestCase):
         self.assertEqual(by["20-2020-0012345"]["asset_status"], "unsupported")
 
 
+class TestBModePatentGuard(unittest.TestCase):
+    def test_bmode_patent_is_review_with_clear_basis(self):
+        out = tempfile.mkdtemp()
+        with mock.patch.object(config, "load_access_key", return_value="k"), \
+             mock.patch.object(core, "call") as m:
+            cli.run_accounting(_acct_testset([("10-2020-0012345", 5000)]), Path(out), "json", None, 0.0, "b")
+            self.assertEqual(m.call_count, 0)  # 호출 안 함
+        row = _load_ledger(out)[0]
+        self.assertEqual(row["asset_status"], "검토필요")
+        self.assertIn("B-모드", row["basis"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -220,6 +220,12 @@ def _classify_c(appno, right_code, cost_raw, access_key, queried_at) -> dict:
 def _classify_b(appno, right_code, cost_raw, svc, access_key, queried_at) -> dict:
     """B-모드: 행정처리 이력 마일스톤 추론(보수). 등록은 확정 불가 → 검토필요."""
     label = config.RIGHT_CODE_INFO[right_code]["label"]
+    if svc is None:  # 행정처리 이력 미지원 권리구분(특허 등) → 검토필요
+        b, a = config.REVIEW_BUCKET
+        return accounting.build_row(
+            appno=appno, right_code=right_code, cost_raw=cost_raw, legal_state="-",
+            basis="B-모드는 상표 전용(행정처리 이력 미지원 권리구분) → 검토필요", right_label=label,
+            bucket=b, account=a, source_mode="B", queried_at=queried_at)
     parsed = core.parse(core.call(appno, svc, access_key))
     status = core.decide_status(parsed["result_code"], len(parsed["items"]))
     if status == "fatal":
