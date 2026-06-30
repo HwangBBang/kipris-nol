@@ -159,6 +159,18 @@ PATENT_XML_MINIMAL = (
 )
 
 
+def _patent_xml(status, reg_no="", reg_date=""):
+    return (f"<response><header><resultCode>00</resultCode><resultMsg>success</resultMsg></header>"
+            f"<body><items><PatentUtilityInfo>"
+            f"<ApplicationNumber>1020200012345</ApplicationNumber>"
+            f"<InventionName>테스트발명</InventionName>"
+            f"<RegistrationStatus>{status}</RegistrationStatus>"
+            f"<RegistrationNumber>{reg_no}</RegistrationNumber>"
+            f"<RegistrationDate>{reg_date}</RegistrationDate>"
+            f"</PatentUtilityInfo><TotalSearchCount>1</TotalSearchCount>"
+            f"<SearchStartNumber>1</SearchStartNumber></items></body></response>")
+
+
 class TestPatentExtraParamsWiring(unittest.TestCase):
     """patent C-모드에서 extra_params={"patent":"true","utility":"true"}가 core.call에 전달되는지 검증."""
 
@@ -178,6 +190,33 @@ class TestPatentExtraParamsWiring(unittest.TestCase):
             )
 
         self.assertEqual(captured.get("extra_params"), {"patent": "true", "utility": "true"})
+
+
+class TestPatentFailSafe(unittest.TestCase):
+    def _run(self, rows, xml_by_appno):
+        out = tempfile.mkdtemp()
+        with mock.patch.object(config, "load_access_key", return_value="k"), \
+             mock.patch.object(core, "call", side_effect=lambda a, s, k, **kw: xml_by_appno[a]):
+            cli.run_accounting(_acct_testset(rows), Path(out), "json", None, 0.0, "c")
+        return {r["application_number"]: r for r in _load_ledger(out)}
+
+    def test_patent_rejected_classifies(self):
+        by = self._run([("10-2020-0012345", 5000)], {"10-2020-0012345": _patent_xml("거절")})
+        self.assertEqual(by["10-2020-0012345"]["asset_status"], "탈락")
+        self.assertEqual(by["10-2020-0012345"]["right_label"], "특허")
+
+    def test_patent_registered_is_review_phase1(self):  # '등록' 미수록 → 검토필요(추측금지)
+        by = self._run([("10-2020-0012345", 5000)],
+                       {"10-2020-0012345": _patent_xml("등록", "1012345670000", "20200101")})
+        self.assertEqual(by["10-2020-0012345"]["asset_status"], "검토필요")
+
+    def test_patent_dormant_is_review(self):  # 소멸 미수록 → 검토필요(결정2 자동충족)
+        by = self._run([("10-2020-0012345", 5000)], {"10-2020-0012345": _patent_xml("소멸")})
+        self.assertEqual(by["10-2020-0012345"]["asset_status"], "검토필요")
+
+    def test_utility_model_20_unsupported(self):
+        by = self._run([("20-2020-0012345", 5000)], {"20-2020-0012345": _patent_xml("등록")})
+        self.assertEqual(by["20-2020-0012345"]["asset_status"], "unsupported")
 
 
 if __name__ == "__main__":
