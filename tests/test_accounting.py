@@ -82,8 +82,12 @@ class TestClassify(unittest.TestCase):
         self.assertEqual(accounting.classify("70", "심사중"), ("대기", "건설중인자산(무형)", "상표"))
 
     def test_out_of_scope_right_code(self):
-        # 10(특허)은 아직 RIGHT_CODE_INFO 미등록 → unsupported
-        self.assertEqual(accounting.classify("10", "심사중"), ("unsupported", "", ""))
+        # 20(실용신안)은 자산계정 미확정 → RIGHT_CODE_INFO 미등록 → unsupported
+        self.assertEqual(accounting.classify("20", "심사중"), ("unsupported", "", ""))
+
+    def test_patent_right_code_supported(self):
+        # 10(특허)은 Task 2에서 RIGHT_CODE_INFO 등록 → 분류 가능
+        self.assertEqual(accounting.classify("10", "심사중"), ("대기", "건설중인자산(무형)", "특허"))
 
 
 class TestBuildRow(unittest.TestCase):

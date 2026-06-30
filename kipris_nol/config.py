@@ -70,13 +70,13 @@ NON_ERROR_RESULT_CODES = {"", "00", "20"}
 # premise 2: "법적상태 → 자산/비용/대기" 매핑은 코드가 아니라 설정으로 분리.
 # --------------------------------------------------------------------------- #
 
-# 권리구분(출원번호 앞 2자리) → 라벨 + 자산 계정. v1 = 국내 상표(40)만 지원.
-# 70 등 비대상은 미등록 → unsupported(자동 분류 금지).
+# 권리구분(출원번호 앞 2자리) → 라벨 + 자산 계정 + 어댑터 키.
 RIGHT_CODE_INFO: dict[str, dict] = {
-    "40": {"label": "상표", "asset_account": "상표권"},
+    "40": {"label": "상표", "asset_account": "상표권", "adapter": "상표"},
     # 70- = 지정상품추가등록출원(상표 패밀리). 정보검색이 상표로 확인(2026-06-23) → 상표로 포함.
-    "70": {"label": "상표", "asset_account": "상표권"},
-    # 향후: "10"/"20" 특허·실용 → {"label": "특허", "asset_account": "특허권"}
+    "70": {"label": "상표", "asset_account": "상표권", "adapter": "상표"},
+    "10": {"label": "특허", "asset_account": "특허권", "adapter": "특허"},
+    # 20(실용신안)은 자산계정 미확정 → 미등록(unsupported). 30(디자인)·기타도 미등록.
 }
 
 # 상표 정보검색 — 확정 행정상태(법적상태) 제공. 2026-06-23 승인·라이브 확인.
@@ -121,3 +121,37 @@ BUCKET_RULES: dict[str, tuple[str, str]] = {
 REVIEW_BUCKET = ("검토필요", "")
 # 권리구분 범위 밖(예: 70-) → 자동 분류 금지.
 UNSUPPORTED_BUCKET = ("unsupported", "")
+
+# --------------------------------------------------------------------------- #
+# 권리구분별 검색 어댑터 (Task 2: 골격 정의. 실제 호출 연결은 추후 Task에서.)
+# --------------------------------------------------------------------------- #
+
+# 특허 정보검색 서비스 스펙. 실측 스키마(2026-06-30).
+PATENT_SEARCH = {
+    "service_id": "patUtiModInfoSearchSevice",
+    "operation": "applicationNumberSearchInfo",
+    "param": "applicationNumber",
+}
+
+# 라이브 관측(2026-06-30)된 RegistrationStatus 값만. 미수록 → 검토필요(추측 매핑 금지).
+PATENT_STATUS_MAP = {"거절": "거절"}
+
+# 권리구분 타입별 검색 어댑터: 서비스·정적파라미터·응답컨테이너·필드맵·상태맵·등록요건.
+SEARCH_ADAPTERS: dict[str, dict] = {
+    "상표": {
+        "service": TRADEMARK_SEARCH, "extra": {},
+        "item_xpath": ".//TradeMarkInfo",
+        "fields": {"status": "ApplicationStatus", "title": "Title",
+                   "reg_no": "RegistrationNumber", "reg_date": "RegistrationDate"},
+        "status_map": APPLICATION_STATUS_MAP,
+        "reg_requires": ("reg_no", "reg_date"),
+    },
+    "특허": {  # 실측 스키마(2026-06-30). status_map은 Phase 1엔 거절만.
+        "service": PATENT_SEARCH, "extra": {"patent": "true", "utility": "true"},
+        "item_xpath": ".//PatentUtilityInfo",
+        "fields": {"status": "RegistrationStatus", "title": "InventionName",
+                   "reg_no": "RegistrationNumber", "reg_date": "RegistrationDate"},
+        "status_map": PATENT_STATUS_MAP,
+        "reg_requires": ("reg_no", "reg_date"),
+    },
+}

@@ -41,5 +41,20 @@ class TestLoadAccessKey(unittest.TestCase):
             config.load_access_key(path)
 
 
+class TestAdapterRegistry(unittest.TestCase):
+    def test_every_right_code_adapter_exists(self):
+        from kipris_nol import config
+        for code, info in config.RIGHT_CODE_INFO.items():
+            self.assertIn("adapter", info, f"RIGHT_CODE_INFO['{code}'] missing 'adapter'")
+            self.assertIn(info["adapter"], config.SEARCH_ADAPTERS, f"adapter '{info['adapter']}' not in SEARCH_ADAPTERS")
+
+    def test_trademark_adapter_shape(self):
+        from kipris_nol import config
+        a = config.SEARCH_ADAPTERS["상표"]
+        self.assertEqual(a["item_xpath"], ".//TradeMarkInfo")
+        self.assertEqual(a["fields"]["status"], "ApplicationStatus")
+        self.assertEqual(a["status_map"], config.APPLICATION_STATUS_MAP)
+
+
 if __name__ == "__main__":
     unittest.main()
