@@ -199,6 +199,38 @@ class TestCMode(unittest.TestCase):
         self.assertEqual(title, "X")
 
 
+class TestClassifyCFromXml(unittest.TestCase):
+    def _row(self, xml, adapter_key, right_code, cost=1000):
+        appno = "40-2024-0133564" if adapter_key == "상표" else "10-2020-0012345"
+        a = config.SEARCH_ADAPTERS[adapter_key]
+        return accounting.classify_c_from_xml(appno, xml, a, right_code, cost, "2026-06-30T00:00:00+09:00")
+
+    def test_trademark_registered_full_row(self):
+        xml = (FIX / "info_reg.xml").read_text(encoding="utf-8")
+        row = self._row(xml, "상표", "40")
+        self.assertEqual(row["asset_status"], "등록")
+        self.assertEqual(row["account"], "상표권")
+        self.assertEqual(row["recognition_date"], "20260522")
+        self.assertEqual(row["kipris_status"], "등록")
+
+    def test_fatal_rc_degrades_to_review(self):
+        xml = "<response><header><resultCode>31</resultCode></header><body><items></items></body></response>"
+        row = self._row(xml, "특허", "10")
+        self.assertEqual(row["asset_status"], "검토필요")
+        self.assertIn("인증오류", row["basis"])
+
+    def test_no_record_is_review(self):
+        xml = "<response><header><resultCode>00</resultCode></header><body><items></items></body></response>"
+        row = self._row(xml, "특허", "10")
+        self.assertEqual(row["asset_status"], "검토필요")
+
+    def test_appno_propagated_to_row(self):
+        xml = (FIX / "info_reg.xml").read_text(encoding="utf-8")
+        a = config.SEARCH_ADAPTERS["상표"]
+        row = accounting.classify_c_from_xml("40-2024-0133564", xml, a, "40", 118000, "2026-06-30T00:00:00+09:00")
+        self.assertEqual(row["application_number"], "40-2024-0133564")
+
+
 class TestReviewCsv(unittest.TestCase):
     def test_review_csv_headers_and_values(self):
         row = accounting.build_row(

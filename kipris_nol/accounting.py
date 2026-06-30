@@ -125,6 +125,36 @@ def derive_legal_state_c_mode(info: dict) -> tuple[str, str, str, str, str]:
     return derive_legal_state(info, a["fields"], a["status_map"], a["reg_requires"])
 
 
+def classify_c_from_xml(appno: str, xml_text: str, adapter: dict, right_code: str,
+                         cost_raw, queried_at: str) -> dict:
+    """정보검색 응답 XML → 자산대장 행. 어댑터 주입형(상표/특허 공통)."""
+    label = config.RIGHT_CODE_INFO[right_code]["label"]
+    parsed = parse_info(xml_text, adapter["item_xpath"])
+    rc = parsed["result_code"]
+    if rc in config.FATAL_RESULT_CODES:  # 인증오류 → 건별 강등(설계 F3)
+        b, a = config.REVIEW_BUCKET
+        return build_row(appno=appno, right_code=right_code, cost_raw=cost_raw, legal_state="-",
+                         basis=f"정보검색 인증오류 rc={rc} → 검토필요(서비스 접근 확인)", right_label=label,
+                         bucket=b, account=a, source_mode="C", queried_at=queried_at,
+                         result_code=rc, result_msg=parsed["result_msg"])
+    if parsed["info"] is None:
+        b, a = config.REVIEW_BUCKET
+        why = (f"다건({parsed['item_count']}건) 확정불가" if parsed["item_count"] > 1
+               else f"결과 없음(rc={rc!r})")
+        return build_row(appno=appno, right_code=right_code, cost_raw=cost_raw, legal_state="-",
+                         basis=f"정보검색 {why} → 검토필요", right_label=label,
+                         bucket=b, account=a, source_mode="C", queried_at=queried_at, result_code=rc)
+    legal_state, basis, title, reg_no, reg_date = derive_legal_state(
+        parsed["info"], adapter["fields"], adapter["status_map"], adapter["reg_requires"])
+    bucket, account, _ = classify(right_code, legal_state)
+    return build_row(appno=appno, right_code=right_code, cost_raw=cost_raw, legal_state=legal_state,
+                     basis=basis, right_label=label, bucket=bucket, account=account,
+                     reg_no=reg_no, mark_name=title,
+                     recognition_date=(reg_date if bucket == "등록" else ""), source_mode="C",
+                     queried_at=queried_at, result_code=rc,
+                     kipris_status=(parsed["info"].get(adapter["fields"]["status"]) or "").strip())
+
+
 # --------------------------------------------------------------------------- #
 # 법적상태 → 버킷·계정
 # --------------------------------------------------------------------------- #

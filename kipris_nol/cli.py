@@ -181,6 +181,9 @@ def run_accounting(input_path: Path, out_dir: Path, fmt: str, limit: int | None,
             print(f"  [{idx}/{total}] {appno}  검토필요 (중복)")
             continue
 
+        if info is not None and source == "c" and "adapter" not in info:
+            raise KeyError(f"RIGHT_CODE_INFO['{right_code}'] missing 'adapter' (config 마이그레이션 누락)")
+
         try:
             if source == "c":
                 row = _classify_c(appno, right_code, cost_raw, access_key, queried_at)
@@ -208,31 +211,10 @@ def run_accounting(input_path: Path, out_dir: Path, fmt: str, limit: int | None,
 
 
 def _classify_c(appno, right_code, cost_raw, access_key, queried_at) -> dict:
-    """C-모드: 상표 정보검색 ApplicationStatus 기반 확정 분류."""
-    label = config.RIGHT_CODE_INFO[right_code]["label"]
-    pinfo = accounting.parse_trademark_info(core.call(appno, config.TRADEMARK_SEARCH, access_key))
-    rc = pinfo["result_code"]
-    if rc in config.FATAL_RESULT_CODES:  # 정보검색 인증오류 → 전건 중단 대신 건별 강등(설계 F3)
-        b, a = config.REVIEW_BUCKET
-        return accounting.build_row(
-            appno=appno, right_code=right_code, cost_raw=cost_raw, legal_state="-",
-            basis=f"정보검색 인증오류 rc={rc} → 검토필요(서비스 접근 확인)", right_label=label,
-            bucket=b, account=a, source_mode="C", queried_at=queried_at,
-            result_code=rc, result_msg=pinfo["result_msg"])
-    if pinfo["info"] is None:
-        b, a = config.REVIEW_BUCKET
-        return accounting.build_row(
-            appno=appno, right_code=right_code, cost_raw=cost_raw, legal_state="-",
-            basis=f"정보검색 결과 없음(rc={rc!r}) → 검토필요", right_label=label,
-            bucket=b, account=a, source_mode="C", queried_at=queried_at, result_code=rc)
-    legal_state, basis, mark, reg_no, reg_date = accounting.derive_legal_state_c_mode(pinfo["info"])
-    bucket, account, _ = accounting.classify(right_code, legal_state)
-    return accounting.build_row(
-        appno=appno, right_code=right_code, cost_raw=cost_raw, legal_state=legal_state, basis=basis,
-        right_label=label, bucket=bucket, account=account, reg_no=reg_no, mark_name=mark,
-        recognition_date=(reg_date if bucket == "등록" else ""), source_mode="C",
-        queried_at=queried_at, result_code=rc,
-        kipris_status=(pinfo["info"].get("ApplicationStatus") or "").strip())
+    """C-모드: 권리구분 어댑터로 정보검색 → 확정 분류."""
+    adapter = config.SEARCH_ADAPTERS[config.RIGHT_CODE_INFO[right_code]["adapter"]]
+    xml = core.call(appno, adapter["service"], access_key)
+    return accounting.classify_c_from_xml(appno, xml, adapter, right_code, cost_raw, queried_at)
 
 
 def _classify_b(appno, right_code, cost_raw, svc, access_key, queried_at) -> dict:
