@@ -147,5 +147,38 @@ class TestRunAccountingC(unittest.TestCase):
         self.assertEqual(by["40-2025-0233236"]["asset_status"], "탈락")
 
 
+PATENT_XML_MINIMAL = (
+    "<response><header><resultCode>00</resultCode></header>"
+    "<body><items>"
+    "<PatentUtilityInfo>"
+    "<ApplicationNumber>1020200012345</ApplicationNumber>"
+    "<RegistrationStatus>거절</RegistrationStatus>"
+    "</PatentUtilityInfo>"
+    "<TotalSearchCount>1</TotalSearchCount>"
+    "</items></body></response>"
+)
+
+
+class TestPatentExtraParamsWiring(unittest.TestCase):
+    """patent C-모드에서 extra_params={"patent":"true","utility":"true"}가 core.call에 전달되는지 검증."""
+
+    def test_patent_c_mode_passes_extra_params(self):
+        captured = {}
+
+        def fake_call(appno, svc, key, **kw):
+            captured["extra_params"] = kw.get("extra_params")
+            return PATENT_XML_MINIMAL
+
+        out = tempfile.mkdtemp()
+        with mock.patch.object(config, "load_access_key", return_value="k"), \
+             mock.patch.object(core, "call", side_effect=fake_call):
+            cli.run_accounting(
+                _acct_testset([("10-2020-0012345", 100000)]),
+                Path(out), "json", None, 0.0, "c",
+            )
+
+        self.assertEqual(captured.get("extra_params"), {"patent": "true", "utility": "true"})
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -213,7 +213,7 @@ def run_accounting(input_path: Path, out_dir: Path, fmt: str, limit: int | None,
 def _classify_c(appno, right_code, cost_raw, access_key, queried_at) -> dict:
     """C-모드: 권리구분 어댑터로 정보검색 → 확정 분류."""
     adapter = config.SEARCH_ADAPTERS[config.RIGHT_CODE_INFO[right_code]["adapter"]]
-    xml = core.call(appno, adapter["service"], access_key)
+    xml = core.call(appno, adapter["service"], access_key, extra_params=adapter["extra"])
     return accounting.classify_c_from_xml(appno, xml, adapter, right_code, cost_raw, queried_at)
 
 

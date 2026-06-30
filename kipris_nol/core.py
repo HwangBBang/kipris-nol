@@ -94,9 +94,12 @@ def _scrub(exc: BaseException | str, key: str) -> str:
     return text
 
 
-def build_url(appno: str, svc: dict, access_key: str) -> str:
-    """요청 URL 생성. accessKey 는 URL 인코딩(키에 '/','=' 포함)."""
-    params = {svc["param"]: _strip_hyphens(appno), "accessKey": access_key}
+def build_url(appno: str, svc: dict, access_key: str, *, extra_params: dict | None = None) -> str:
+    """요청 URL 생성. accessKey 는 항상 마지막(스크럽/테스트 정합). extra_params 있으면 그 앞에 삽입."""
+    params = {svc["param"]: _strip_hyphens(appno)}
+    if extra_params:
+        params.update(extra_params)
+    params["accessKey"] = access_key  # 항상 마지막(스크럽/테스트 정합)
     return f"{config.BASE_URL}/{svc['service_id']}/{svc['operation']}?" + urllib.parse.urlencode(params)
 
 
@@ -107,11 +110,12 @@ def call(
     *,
     timeout: int | None = None,
     retry: int | None = None,
+    extra_params: dict | None = None,
 ) -> str:
     """서비스 GET 후 응답 텍스트 반환. 단일 재시도. 에러 메시지에서 키를 가린다."""
     timeout = config.TIMEOUT_SEC if timeout is None else timeout
     retry = config.RETRY if retry is None else retry
-    url = build_url(appno, svc, access_key)
+    url = build_url(appno, svc, access_key, extra_params=extra_params)
     last = ""
     for attempt in range(retry + 1):
         try:

@@ -142,6 +142,14 @@ class TestDecideStatus(unittest.TestCase):
 
 
 class TestUrlBuildingKeySafety(unittest.TestCase):
+    def test_build_url_extra_params_and_key_last(self):
+        from kipris_nol import core
+        svc = {"service_id": "S", "operation": "O", "param": "applicationNumber"}
+        url = core.build_url("10-2020-0012345", svc, "K", extra_params={"patent": "true"})
+        self.assertIn("patent=true", url)
+        self.assertIn("applicationNumber=1020200012345", url)
+        self.assertTrue(url.rstrip().endswith("accessKey=K"))  # accessKey 마지막
+
     def test_hyphen_stripped_and_key_encoded(self):
         url = core.build_url("40-2025-0233236", config.TRADEMARK_HISTORY, "a/b=c+d")
         self.assertIn("applicationNumber=4020250233236", url)  # 하이픈 제거
