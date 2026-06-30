@@ -1,5 +1,6 @@
 """회계 분류 로직 단위 테스트 (순수 함수)."""
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -169,6 +170,27 @@ class TestCMode(unittest.TestCase):
         info = self._info("info_reg.xml")["info"]
         state, _, _, _, _ = accounting.derive_legal_state_c_mode(info)
         self.assertEqual(accounting.classify("40", state), ("등록", "상표권", "상표"))
+
+
+class TestReviewCsv(unittest.TestCase):
+    def test_review_csv_headers_and_values(self):
+        row = accounting.build_row(
+            appno="40-2024-0133564", right_code="40", cost_raw=118000, legal_state="등록",
+            basis="정보검색 ApplicationStatus='등록'", right_label="상표", bucket="등록",
+            account="상표권", reg_no="4025487260000", mark_name="NOL", recognition_date="20260522",
+            source_mode="C", kipris_status="등록")
+        path = Path(tempfile.mkdtemp()) / "review.csv"
+        accounting.write_review_csv([row], path)
+        text = path.read_text(encoding="utf-8-sig")
+        lines = text.strip().splitlines()
+        self.assertIn("출원번호", lines[0])
+        self.assertIn("KIPRIS상태(원본)", lines[0])
+        self.assertIn("취득원가(부가세제외)", lines[0])
+        self.assertIn("40-2024-0133564", lines[1])
+        self.assertIn("상표권", lines[1])
+        self.assertIn("118000", lines[1])
+        # 전체 행/디테일은 LEDGER에, 검수 CSV는 핵심 열만(10열)
+        self.assertEqual(len(lines[0].split(",")), len(accounting.REVIEW_COLUMNS))
 
 
 if __name__ == "__main__":

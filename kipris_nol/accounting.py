@@ -15,9 +15,10 @@ from . import config
 
 # 자산대장 출력 필드(실무자 확정 필수항목 + 판정 근거). raw_items는 CSV 제외(JSON 감사용).
 LEDGER_FIELDS = [
-    "application_number",   # 출원번호
+    "application_number",   # 출원번호 (입력)
     "right_code",           # 권리구분 코드(40/70/...)
     "right_label",          # 권리구분(상표/특허)
+    "kipris_status",        # KIPRIS 원본 상태값(정보검색 ApplicationStatus) — 검증용 원천
     "registration_number",  # 등록번호
     "mark_name",            # 상표명/발명명칭 (B-모드에선 미확보 → C/정보검색 필요)
     "recognition_date",     # 자산화 인식일(=등록일; 등록 확정 시에만)
@@ -139,7 +140,8 @@ def latest_reg_no(items: list[dict]) -> str:
 # --------------------------------------------------------------------------- #
 def build_row(*, appno, right_code, cost_raw, legal_state, basis, right_label,
               bucket, account, reg_no="", mark_name="", recognition_date="",
-              source_mode="B", queried_at="", result_code="", result_msg="") -> dict:
+              source_mode="B", queried_at="", result_code="", result_msg="",
+              kipris_status="") -> dict:
     cost = parse_cost(cost_raw)
     if cost is None:  # cost 무효 → 검토필요(합계 오염 방지)
         bucket, account = config.REVIEW_BUCKET
@@ -148,6 +150,7 @@ def build_row(*, appno, right_code, cost_raw, legal_state, basis, right_label,
         "application_number": appno,
         "right_code": right_code,
         "right_label": right_label,
+        "kipris_status": kipris_status,
         "registration_number": reg_no,
         "mark_name": mark_name,
         "recognition_date": recognition_date,
@@ -189,3 +192,33 @@ def write_ledger_csv(rows: list[dict], path: Path | str) -> None:
         writer.writeheader()
         for row in rows:
             writer.writerow(row)  # raw_items 등 추가 키는 extrasaction='ignore'로 자동 제외
+
+
+# 검수용(실무자) 시트 — 핵심 열만, 한글 헤더. (field, 헤더) 순서가 곧 열 순서.
+REVIEW_COLUMNS = [
+    ("application_number", "출원번호"),
+    ("mark_name", "상표명"),
+    ("right_label", "권리구분"),
+    ("kipris_status", "KIPRIS상태(원본)"),
+    ("asset_status", "자산상태"),
+    ("account", "회계계정"),
+    ("acquisition_cost", "취득원가(부가세제외)"),
+    ("registration_number", "등록번호"),
+    ("recognition_date", "자산화인식일"),
+    ("basis", "판정근거"),
+]
+
+
+def write_review_csv(rows: list[dict], path: Path | str) -> None:
+    """실무자 검수용 CSV — 입력→KIPRIS원본→판정이 한눈에 보이는 핵심 열만."""
+    with Path(path).open("w", encoding="utf-8-sig", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([header for _, header in REVIEW_COLUMNS])
+        for row in rows:
+            cells = []
+            for field, _ in REVIEW_COLUMNS:
+                value = row.get(field, "")
+                if field == "acquisition_cost" and isinstance(value, (int, float)):
+                    value = f"{int(value)}"  # 원화 정수 표기(180000.0 → 180000)
+                cells.append(value)
+            writer.writerow(cells)

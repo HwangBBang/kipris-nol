@@ -231,7 +231,8 @@ def _classify_c(appno, right_code, cost_raw, access_key, queried_at) -> dict:
         appno=appno, right_code=right_code, cost_raw=cost_raw, legal_state=legal_state, basis=basis,
         right_label=label, bucket=bucket, account=account, reg_no=reg_no, mark_name=mark,
         recognition_date=(reg_date if bucket == "등록" else ""), source_mode="C",
-        queried_at=queried_at, result_code=rc)
+        queried_at=queried_at, result_code=rc,
+        kipris_status=(pinfo["info"].get("ApplicationStatus") or "").strip())
 
 
 def _classify_b(appno, right_code, cost_raw, svc, access_key, queried_at) -> dict:
@@ -270,6 +271,9 @@ def _write_ledger(rows, out_dir: Path, fmt: str) -> None:
         p = out_dir / f"ledger-{stamp}.csv"
         accounting.write_ledger_csv(rows, p)
         print(f"[kipris-nol] 자산대장 CSV  → {p}")
+        pr = out_dir / f"review-{stamp}.csv"
+        accounting.write_review_csv(rows, pr)
+        print(f"[kipris-nol] 검수용 CSV   → {pr}")
 
 
 def _print_acct_summary(rows) -> None:
