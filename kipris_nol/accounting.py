@@ -80,34 +80,48 @@ def derive_legal_state_b_mode(items: list[dict]) -> tuple[str, str]:
 
 
 # --------------------------------------------------------------------------- #
-# C-모드: 상표 정보검색(trademarkInfoSearchService) → 확정 행정상태
+# C-모드: 제네릭 정보검색 파서 + 법적상태 도출
 # --------------------------------------------------------------------------- #
-def parse_trademark_info(xml_text: str) -> dict:
-    """정보검색 응답 → {result_code, result_msg, info}. info=TradeMarkInfo 필드 dict 또는 None."""
+def parse_info(xml_text: str, item_xpath: str) -> dict:
+    """정보검색 응답 → {result_code, result_msg, info, item_count}.
+    info = item_xpath 단일 매칭 레코드 dict. 0건 또는 다건이면 None(검토필요 신호)."""
     root = ET.fromstring(xml_text)
     rc = (root.findtext(".//resultCode") or "").strip()
     rm = (root.findtext(".//resultMsg") or "").strip()
-    tm = root.find(".//TradeMarkInfo")
-    info = None if tm is None else {child.tag: (child.text or "").strip() for child in tm}
-    return {"result_code": rc, "result_msg": rm, "info": info}
+    recs = root.findall(item_xpath)
+    info = None
+    if len(recs) == 1:
+        info = {child.tag: (child.text or "").strip() for child in recs[0]}
+    return {"result_code": rc, "result_msg": rm, "info": info, "item_count": len(recs)}
+
+
+def derive_legal_state(info: dict, fields: dict, status_map: dict,
+                       reg_requires: tuple) -> tuple[str, str, str, str, str]:
+    """응답 레코드 → (legal_state, basis, title, reg_no, reg_date).
+    status_map 미수록 → 검토필요. state==등록인데 reg_requires 필드 공란 → 일관성위반 검토필요."""
+    status = (info.get(fields["status"]) or "").strip()
+    title = (info.get(fields["title"]) or "").strip()
+    reg_no = (info.get(fields["reg_no"]) or "").strip()
+    reg_date = (info.get(fields["reg_date"]) or "").strip()
+    state = status_map.get(status)
+    if state is None:
+        return "검토필요", f"미수록 상태값 '{status}'", title, reg_no, reg_date
+    if state == "등록":
+        vals = {"reg_no": reg_no, "reg_date": reg_date}
+        if any(not vals[k] for k in reg_requires):
+            return "검토필요", "상태=등록이나 등록번호/등록일 누락(일관성 위반)", title, reg_no, reg_date
+    return state, f"정보검색 상태='{status}'", title, reg_no, reg_date
+
+
+def parse_trademark_info(xml_text: str) -> dict:
+    """상표 정보검색 thin wrapper(기존 시그니처 보존)."""
+    return parse_info(xml_text, ".//TradeMarkInfo")
 
 
 def derive_legal_state_c_mode(info: dict) -> tuple[str, str, str, str, str]:
-    """정보검색 TradeMarkInfo → (legal_state, basis, mark_name, reg_no, reg_date).
-
-    ApplicationStatus를 표준 법적상태로 매핑. 미수록 값 → 검토필요.
-    '등록'인데 등록번호/등록일이 없으면 일관성 위반 → 검토필요(오분류 0).
-    """
-    status = (info.get("ApplicationStatus") or "").strip()
-    mark = (info.get("Title") or "").strip()
-    reg_no = (info.get("RegistrationNumber") or "").strip()
-    reg_date = (info.get("RegistrationDate") or "").strip()
-    state = config.APPLICATION_STATUS_MAP.get(status)
-    if state is None:
-        return "검토필요", f"미수록 ApplicationStatus '{status}'", mark, reg_no, reg_date
-    if state == "등록" and not (reg_no and reg_date):
-        return "검토필요", "ApplicationStatus=등록이나 등록번호/등록일 누락(일관성 위반)", mark, reg_no, reg_date
-    return state, f"정보검색 ApplicationStatus='{status}'", mark, reg_no, reg_date
+    """상표 thin wrapper(기존 시그니처 보존)."""
+    a = config.SEARCH_ADAPTERS["상표"]
+    return derive_legal_state(info, a["fields"], a["status_map"], a["reg_requires"])
 
 
 # --------------------------------------------------------------------------- #

@@ -175,6 +175,20 @@ class TestCMode(unittest.TestCase):
         state, _, _, _, _ = accounting.derive_legal_state_c_mode(info)
         self.assertEqual(accounting.classify("40", state), ("등록", "상표권", "상표"))
 
+    def test_generic_parse_multi_record_is_none(self):
+        xml = ("<response><header><resultCode>00</resultCode></header><body><items>"
+               "<X><A>1</A></X><X><A>2</A></X></items></body></response>")
+        p = accounting.parse_info(xml, ".//X")
+        self.assertIsNone(p["info"])
+        self.assertEqual(p["item_count"], 2)
+
+    def test_generic_derive_patent_fields(self):
+        info = {"RegistrationStatus": "거절", "InventionName": "X", "RegistrationNumber": "", "RegistrationDate": ""}
+        a = config.SEARCH_ADAPTERS["특허"]
+        state, _, title, _, _ = accounting.derive_legal_state(info, a["fields"], a["status_map"], a["reg_requires"])
+        self.assertEqual(state, "거절")
+        self.assertEqual(title, "X")
+
 
 class TestReviewCsv(unittest.TestCase):
     def test_review_csv_headers_and_values(self):
