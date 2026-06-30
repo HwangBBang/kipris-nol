@@ -231,6 +231,13 @@ class TestClassifyCFromXml(unittest.TestCase):
         self.assertEqual(row["application_number"], "40-2024-0133564")
 
 
+class TestReviewHeader(unittest.TestCase):
+    def test_review_header_is_generic_name(self):
+        headers = [h for _, h in accounting.REVIEW_COLUMNS]
+        self.assertIn("명칭", headers)
+        self.assertNotIn("상표명", headers)
+
+
 class TestReviewCsv(unittest.TestCase):
     def test_review_csv_headers_and_values(self):
         row = accounting.build_row(

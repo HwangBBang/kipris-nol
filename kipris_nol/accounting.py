@@ -242,7 +242,7 @@ def write_ledger_csv(rows: list[dict], path: Path | str) -> None:
 # 검수용(실무자) 시트 — 핵심 열만, 한글 헤더. (field, 헤더) 순서가 곧 열 순서.
 REVIEW_COLUMNS = [
     ("application_number", "출원번호"),
-    ("mark_name", "상표명"),
+    ("mark_name", "명칭"),
     ("right_label", "권리구분"),
     ("kipris_status", "KIPRIS상태(원본)"),
     ("asset_status", "자산상태"),

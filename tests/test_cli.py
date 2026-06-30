@@ -7,6 +7,8 @@
 - resultCode 10 연속 → 버그 신호로 중단(수집분 저장).
 - resultCode 30 = 전건 중단(FatalAuthError).
 """
+import contextlib
+import io
 import json
 import sys
 import tempfile
@@ -217,6 +219,17 @@ class TestPatentFailSafe(unittest.TestCase):
     def test_utility_model_20_unsupported(self):
         by = self._run([("20-2020-0012345", 5000)], {"20-2020-0012345": _patent_xml("등록")})
         self.assertEqual(by["20-2020-0012345"]["asset_status"], "unsupported")
+
+
+class TestAuthErrorWarning(unittest.TestCase):
+    def test_c_auth_error_prints_warning(self):
+        out = tempfile.mkdtemp()
+        rc31 = "<response><header><resultCode>31</resultCode></header><body><items></items></body></response>"
+        buf = io.StringIO()
+        with mock.patch.object(config, "load_access_key", return_value="k"), \
+             mock.patch.object(core, "call", return_value=rc31), contextlib.redirect_stdout(buf):
+            cli.run_accounting(_acct_testset([("10-2020-0012345", 5000)]), Path(out), "json", None, 0.0, "c")
+        self.assertIn("정보검색 인증오류", buf.getvalue())
 
 
 class TestBModePatentGuard(unittest.TestCase):

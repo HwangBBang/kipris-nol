@@ -207,6 +207,9 @@ def run_accounting(input_path: Path, out_dir: Path, fmt: str, limit: int | None,
 
     _write_ledger(rows, out_dir, fmt)
     _print_acct_summary(rows)
+    auth_err = sum(1 for r in rows if r.get("result_code") in config.FATAL_RESULT_CODES)
+    if auth_err:
+        print(f"[kipris-nol] ⚠ 정보검색 인증오류 {auth_err}건 — 해당 서비스 신청/갱신 상태를 확인하세요(rc 30/31).")
     return 0
 
 
