@@ -148,6 +148,8 @@ class TestCMode(unittest.TestCase):
         self.assertEqual(mark, "NOL")
         self.assertEqual(reg_no, "4025487260000")
         self.assertEqual(reg_date, "20260522")
+        # basis byte-identity guard: 리팩터링 후 상표 basis 문자열이 기존 출력과 동일해야 함
+        self.assertEqual(basis, "정보검색 ApplicationStatus='등록'")
 
     def test_derive_pending_70(self):
         state, _, mark, reg_no, _ = accounting.derive_legal_state_c_mode(self._info("info_pending70.xml")["info"])
@@ -181,6 +183,13 @@ class TestCMode(unittest.TestCase):
         p = accounting.parse_info(xml, ".//X")
         self.assertIsNone(p["info"])
         self.assertEqual(p["item_count"], 2)
+
+    def test_generic_parse_zero_record_is_none(self):
+        xml = ("<response><header><resultCode>00</resultCode></header><body><items>"
+               "</items></body></response>")
+        p = accounting.parse_info(xml, ".//X")
+        self.assertIsNone(p["info"])
+        self.assertEqual(p["item_count"], 0)
 
     def test_generic_derive_patent_fields(self):
         info = {"RegistrationStatus": "거절", "InventionName": "X", "RegistrationNumber": "", "RegistrationDate": ""}

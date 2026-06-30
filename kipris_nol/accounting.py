@@ -99,18 +99,19 @@ def derive_legal_state(info: dict, fields: dict, status_map: dict,
                        reg_requires: tuple) -> tuple[str, str, str, str, str]:
     """응답 레코드 → (legal_state, basis, title, reg_no, reg_date).
     status_map 미수록 → 검토필요. state==등록인데 reg_requires 필드 공란 → 일관성위반 검토필요."""
-    status = (info.get(fields["status"]) or "").strip()
+    field_label = fields["status"]
+    status = (info.get(field_label) or "").strip()
     title = (info.get(fields["title"]) or "").strip()
     reg_no = (info.get(fields["reg_no"]) or "").strip()
     reg_date = (info.get(fields["reg_date"]) or "").strip()
     state = status_map.get(status)
     if state is None:
-        return "검토필요", f"미수록 상태값 '{status}'", title, reg_no, reg_date
+        return "검토필요", f"미수록 {field_label} '{status}'", title, reg_no, reg_date
     if state == "등록":
         vals = {"reg_no": reg_no, "reg_date": reg_date}
         if any(not vals[k] for k in reg_requires):
-            return "검토필요", "상태=등록이나 등록번호/등록일 누락(일관성 위반)", title, reg_no, reg_date
-    return state, f"정보검색 상태='{status}'", title, reg_no, reg_date
+            return "검토필요", f"{field_label}=등록이나 등록번호/등록일 누락(일관성 위반)", title, reg_no, reg_date
+    return state, f"정보검색 {field_label}='{status}'", title, reg_no, reg_date
 
 
 def parse_trademark_info(xml_text: str) -> dict:
