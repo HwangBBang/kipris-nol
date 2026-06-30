@@ -104,5 +104,48 @@ class TestRun(unittest.TestCase):
                 cli.run(_testset(["40-1-1", "40-1-2"]), Path(tempfile.mkdtemp()), "json", None, 0.0)
 
 
+ACC_FIX = Path(__file__).resolve().parent / "fixtures"
+INFO_REG = (ACC_FIX / "info_reg.xml").read_text(encoding="utf-8")
+INFO_PEND = (ACC_FIX / "info_pending70.xml").read_text(encoding="utf-8")
+INFO_REJ = (ACC_FIX / "info_reject.xml").read_text(encoding="utf-8")
+
+
+def _acct_testset(rows):  # rows = [(appno, cost), ...]
+    f = tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8")
+    json.dump([{"applicationNumber": a, "cost": c} for a, c in rows], f)
+    f.close()
+    return Path(f.name)
+
+
+def _load_ledger(out_dir):
+    files = sorted(Path(out_dir).glob("ledger-*.json"))
+    return json.loads(files[-1].read_text(encoding="utf-8"))
+
+
+class TestRunAccountingC(unittest.TestCase):
+    """상표 C-모드 회귀 안전망 — 리팩터 전후 동일해야 함."""
+    def _run(self, rows, xml_by_appno):
+        out = tempfile.mkdtemp()
+        def fake_call(appno, svc, key, **kw):
+            return xml_by_appno[appno]
+        with mock.patch.object(config, "load_access_key", return_value="k"), \
+             mock.patch.object(core, "call", side_effect=fake_call):
+            cli.run_accounting(_acct_testset(rows), Path(out), "both", None, 0.0, "c")
+        return _load_ledger(out)
+
+    def test_trademark_c_rows_snapshot(self):
+        rows = self._run(
+            [("40-2024-0133564", 118000), ("70-2024-0001232", 50000), ("40-2025-0233236", 9000)],
+            {"40-2024-0133564": INFO_REG, "70-2024-0001232": INFO_PEND, "40-2025-0233236": INFO_REJ},
+        )
+        by = {r["application_number"]: r for r in rows}
+        reg = by["40-2024-0133564"]
+        self.assertEqual((reg["asset_status"], reg["account"], reg["legal_state"]), ("등록", "상표권", "등록"))
+        self.assertEqual(reg["recognition_date"], "20260522")
+        self.assertEqual(reg["kipris_status"], "등록")
+        self.assertEqual(by["70-2024-0001232"]["asset_status"], "대기")
+        self.assertEqual(by["40-2025-0233236"]["asset_status"], "탈락")
+
+
 if __name__ == "__main__":
     unittest.main()
