@@ -210,8 +210,32 @@ class TestClassifyCFromXml(unittest.TestCase):
         row = self._row(xml, "상표", "40")
         self.assertEqual(row["asset_status"], "등록")
         self.assertEqual(row["account"], "상표권")
+        self.assertEqual(row["legal_state"], "등록")
         self.assertEqual(row["recognition_date"], "20260522")
         self.assertEqual(row["kipris_status"], "등록")
+        self.assertEqual(row["basis"], "정보검색 ApplicationStatus='등록'")
+
+    def test_trademark_pending70_full_row(self):
+        # ApplicationStatus=출원 → 심사중(대기). basis byte-identity anchor.
+        xml = (FIX / "info_pending70.xml").read_text(encoding="utf-8")
+        row = self._row(xml, "상표", "70")
+        self.assertEqual(row["asset_status"], "대기")
+        self.assertEqual(row["account"], "건설중인자산(무형)")
+        self.assertEqual(row["legal_state"], "심사중")
+        self.assertEqual(row["recognition_date"], "")
+        self.assertEqual(row["kipris_status"], "출원")
+        self.assertEqual(row["basis"], "정보검색 ApplicationStatus='출원'")
+
+    def test_trademark_rejected_full_row(self):
+        # ApplicationStatus=거절 → 탈락. basis byte-identity anchor.
+        xml = (FIX / "info_reject.xml").read_text(encoding="utf-8")
+        row = self._row(xml, "상표", "40")
+        self.assertEqual(row["asset_status"], "탈락")
+        self.assertEqual(row["account"], "지급수수료")
+        self.assertEqual(row["legal_state"], "거절")
+        self.assertEqual(row["recognition_date"], "")
+        self.assertEqual(row["kipris_status"], "거절")
+        self.assertEqual(row["basis"], "정보검색 ApplicationStatus='거절'")
 
     def test_fatal_rc_degrades_to_review(self):
         xml = "<response><header><resultCode>31</resultCode></header><body><items></items></body></response>"
@@ -229,6 +253,22 @@ class TestClassifyCFromXml(unittest.TestCase):
         a = config.SEARCH_ADAPTERS["상표"]
         row = accounting.classify_c_from_xml("40-2024-0133564", xml, a, "40", 118000, "2026-06-30T00:00:00+09:00")
         self.assertEqual(row["application_number"], "40-2024-0133564")
+
+    def test_patent_multi_record_is_review(self):
+        # 특허 응답에 PatentUtilityInfo 2건 → parse_info returns info=None → 검토필요 + basis에 '다건'/'2건'
+        xml = (
+            "<response><header><resultCode>00</resultCode></header>"
+            "<body><items>"
+            "<PatentUtilityInfo><RegistrationStatus>거절</RegistrationStatus></PatentUtilityInfo>"
+            "<PatentUtilityInfo><RegistrationStatus>등록</RegistrationStatus></PatentUtilityInfo>"
+            "<TotalSearchCount>2</TotalSearchCount>"
+            "</items></body></response>"
+        )
+        a = config.SEARCH_ADAPTERS["특허"]
+        row = accounting.classify_c_from_xml("10-2020-0012345", xml, a, "10", 5000, "2026-07-01T00:00:00+09:00")
+        self.assertEqual(row["asset_status"], "검토필요")
+        self.assertIn("다건", row["basis"])
+        self.assertIn("2건", row["basis"])
 
 
 class TestReviewHeader(unittest.TestCase):

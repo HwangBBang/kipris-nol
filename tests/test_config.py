@@ -55,6 +55,19 @@ class TestAdapterRegistry(unittest.TestCase):
         self.assertEqual(a["fields"]["status"], "ApplicationStatus")
         self.assertEqual(a["status_map"], config.APPLICATION_STATUS_MAP)
 
+    def test_all_adapters_have_required_shape(self):
+        # 어댑터 정합성: 모든 어댑터가 필수 키와 fields 내 필수 항목을 갖춰야 함.
+        from kipris_nol import config
+        required_keys = {"service", "extra", "item_xpath", "fields", "status_map", "reg_requires"}
+        required_fields = {"status", "title", "reg_no", "reg_date"}
+        for name, adapter in config.SEARCH_ADAPTERS.items():
+            missing_keys = required_keys - set(adapter)
+            self.assertFalse(missing_keys,
+                             f"SEARCH_ADAPTERS['{name}'] 에 필수 키 누락: {missing_keys}")
+            missing_fields = required_fields - set(adapter.get("fields", {}))
+            self.assertFalse(missing_fields,
+                             f"SEARCH_ADAPTERS['{name}']['fields'] 에 필수 항목 누락: {missing_fields}")
+
 
 if __name__ == "__main__":
     unittest.main()

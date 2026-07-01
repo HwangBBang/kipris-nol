@@ -217,7 +217,14 @@ class TestPatentFailSafe(unittest.TestCase):
         self.assertEqual(by["10-2020-0012345"]["asset_status"], "검토필요")
 
     def test_utility_model_20_unsupported(self):
-        by = self._run([("20-2020-0012345", 5000)], {"20-2020-0012345": _patent_xml("등록")})
+        # 범위 밖 권리구분(20-)은 API를 전혀 호출하지 않아야 함 — call_count로 증명.
+        out = tempfile.mkdtemp()
+        with mock.patch.object(config, "load_access_key", return_value="k"), \
+             mock.patch.object(core, "call") as m:
+            cli.run_accounting(_acct_testset([("20-2020-0012345", 5000)]),
+                               Path(out), "json", None, 0.0, "c")
+            self.assertEqual(m.call_count, 0)  # unsupported → 호출 없음
+        by = {r["application_number"]: r for r in _load_ledger(out)}
         self.assertEqual(by["20-2020-0012345"]["asset_status"], "unsupported")
 
 
