@@ -69,8 +69,7 @@ Python 설치·터미널 없이 더블클릭으로 사용합니다.
 ### 관리자용 — 키 발급·배포
 
 1. [KIPRIS Plus](https://plus.kipris.or.kr) 회원가입 후 로그인.
-2. 데이터서비스 > 데이터목록에서 **"상표 정보검색"과 "특허·실용 정보검색" 두 상품을 각각 신청**(무료).
-   (구현 시 KIPRIS Plus 데이터목록의 실제 상품명을 확인해 표기를 맞출 것 — 설계·docs/index.html은 '특허·실용' 표기)
+2. 데이터서비스 > 데이터목록에서 **"상표 정보검색"과 "특허·실용신안 정보검색" 두 상품을 각각 신청**(무료). 목록에서 명칭이 조금 다르면 상표/특허의 '정보검색' 상품을 찾으면 됩니다.
    [가입·신청 안내](https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210104) ·
    [FAQ](https://plus.kipris.or.kr/portal/bbs/Faq_info.do?bbsId=B0000019&menuNo=210190)
 3. 마이페이지 > APIKEY관리에서 인증키를 복사해 실무자에게 전달합니다. (키는 계정당 1개 공용)
