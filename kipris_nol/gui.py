@@ -223,8 +223,11 @@ class App(tk.Tk):
                 entries, key, source="c", delay=config.INTER_CALL_DELAY_SEC,
                 progress_cb=lambda idx, total, appno, row: self._q.put(("progress", idx, total, appno, row)),
                 should_cancel=self._cancel.is_set,
+                auth_abort_threshold=config.AUTH_ABORT_THRESHOLD,
             )
             self._q.put(("done", rows, self._cancel.is_set()))   # MUST-2: 취소 여부 동반
+        except engine.AuthAbortError as exc:  # 연속 인증오류 — 부분 결과는 partial-로 저장
+            self._q.put(("auth_abort", exc.rows))
         except core.FatalAuthError as exc:  # C-모드에선 드묾(방어)
             self._q.put(("fatal", str(exc)))
         except Exception as exc:  # noqa: BLE001
@@ -248,6 +251,9 @@ class App(tk.Tk):
                 elif kind == "done":
                     self._finish(msg[1], msg[2])   # rows, cancelled
                     terminal = True
+                elif kind == "auth_abort":
+                    self._finish(msg[1], auth_aborted=True)
+                    terminal = True
                 elif kind == "fatal":
                     self._reset_run()
                     messagebox.showerror("인증 오류", f"{msg[1]}\naccessKey를 확인하세요.")
@@ -262,13 +268,17 @@ class App(tk.Tk):
         if not terminal:
             self.after(100, self._poll)
 
-    def _finish(self, rows, cancelled=False) -> None:  # MUST-2: 취소 시 partial- 저장
+    def _finish(self, rows, cancelled=False, auth_aborted=False) -> None:  # MUST-2: 부분본은 partial-
         self._reset_run()
         self._cur.config(text="")
+        n30 = sum(1 for r in rows if r.get("result_code") == "30")
+        n31 = sum(1 for r in rows if r.get("result_code") == "31")
+        auth_err = n30 + n31
         out_dir = viewmodel.default_output_dir()
         out_dir.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        prefix = "partial-" if cancelled else ""   # 완성본 파일명으로의 조용한 저장 금지
+        # cx-review 결정 1: 인증오류가 1건이라도 있으면 완성본 파일명 금지
+        prefix = "partial-" if (cancelled or auth_aborted or auth_err) else ""
         accounting.write_ledger_csv(rows, out_dir / f"{prefix}ledger-{stamp}.csv")
         accounting.write_review_csv(rows, out_dir / f"{prefix}review-{stamp}.csv")
         self._out_dir = out_dir
@@ -279,11 +289,19 @@ class App(tk.Tk):
         banner = viewmodel.summary_banner(rows)
         if cancelled:
             banner = f"취소됨: {len(rows)}건만 수집 (partial- 파일로 저장) · " + banner
+        elif auth_aborted:
+            banner = f"인증 오류로 중단: {len(rows)}건만 수집 (partial- 파일로 저장) · " + banner
+        elif auth_err:
+            banner = f"인증 오류 {auth_err}건 포함 (partial- 파일로 저장) · " + banner
         self._banner.config(text=banner)
-        auth_err = sum(1 for r in rows if r.get("result_code") in config.FATAL_RESULT_CODES)
         if auth_err:
-            messagebox.showwarning(
-                "인증 오류", f"정보검색 인증오류 {auth_err}건 — accessKey 신청/갱신 상태를 확인하세요.")
+            head = "인증 오류로 중단했습니다.\n" if auth_aborted else ""  # 설계 §6.4 확정 문구
+            lines = []  # cx-review 결정 3: 해결 주체가 다른 30/31을 분리 안내
+            if n30:
+                lines.append(f"키 미등록 오류(30) {n30}건 — 키를 재확인해 다시 입력하고, 계속되면 관리자에게 문의하세요.")
+            if n31:
+                lines.append(f"키 사용 기간 만료(31) {n31}건 — 관리자에게 갱신을 요청하세요.")
+            messagebox.showwarning("인증 오류", head + "\n".join(lines))
             self._open_settings()
 
     def _reset_run(self) -> None:

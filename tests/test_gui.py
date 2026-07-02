@@ -143,6 +143,53 @@ class TestGuiSmoke(unittest.TestCase):
             finally:
                 app.destroy()
 
+    def test_auth_abort_writes_partial_and_warns(self):  # 설계 §6.4: 정상 파일명 오용 방지
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        from kipris_nol import gui, viewmodel
+        app = gui.App()
+        try:
+            tmp = Path(tempfile.mkdtemp())
+            rows = [{"application_number": "40-1", "mark_name": "", "asset_status": "검토필요",
+                     "account": "판단보류", "acquisition_cost": None, "basis": "인증오류",
+                     "result_code": "30"}]
+            with mock.patch.object(viewmodel, "default_output_dir", return_value=tmp), \
+                 mock.patch.object(gui.messagebox, "showwarning") as warn, \
+                 mock.patch.object(app, "_open_settings"):
+                app._q.put(("auth_abort", rows))
+                app._poll()
+            self.assertTrue(list(tmp.glob("partial-ledger-*.csv")))
+            self.assertFalse(list(tmp.glob("ledger-*.csv")))
+            self.assertIn("인증 오류로 중단", app._banner.cget("text"))
+            warn.assert_called_once()
+        finally:
+            app.destroy()
+
+    def test_done_with_scattered_auth_error_writes_partial(self):  # cx-review 결정 1: 산발 1건도 partial-
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        from kipris_nol import gui, viewmodel
+        app = gui.App()
+        try:
+            tmp = Path(tempfile.mkdtemp())
+            rows = [{"application_number": "40-1", "mark_name": "NOL", "asset_status": "등록",
+                     "account": "상표권", "acquisition_cost": 1000.0, "basis": "x", "result_code": ""},
+                    {"application_number": "40-2", "mark_name": "", "asset_status": "검토필요",
+                     "account": "판단보류", "acquisition_cost": None, "basis": "인증오류",
+                     "result_code": "31"}]
+            with mock.patch.object(viewmodel, "default_output_dir", return_value=tmp), \
+                 mock.patch.object(gui.messagebox, "showwarning") as warn, \
+                 mock.patch.object(app, "_open_settings"):
+                app._q.put(("done", rows, False))   # 중단 아님 — 정상 완료인데 31이 1건 섞임
+                app._poll()
+            self.assertTrue(list(tmp.glob("partial-ledger-*.csv")))
+            self.assertFalse(list(tmp.glob("ledger-*.csv")))
+            self.assertIn("만료(31)", warn.call_args.args[1])  # 결정 3: 31은 관리자 갱신 안내
+        finally:
+            app.destroy()
+
     def test_verify_result_after_dialog_close_still_saves(self):  # cx-review MUST 3 상향 버그 가드
         import tempfile
         from pathlib import Path
