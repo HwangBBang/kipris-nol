@@ -9,6 +9,15 @@ from typing import Callable
 from . import accounting, config, core
 
 
+class AuthAbortError(RuntimeError):
+    """연속 인증오류(30/31) 임계 도달 — 조기 중단. rows = 중단 시점까지 수집된 행."""
+
+    def __init__(self, count: int, rows: list[dict]):
+        super().__init__(f"연속 인증오류 {count}건으로 중단")
+        self.count = count
+        self.rows = rows
+
+
 def classify_entries(
     entries: list[dict],
     access_key: str,
@@ -17,10 +26,12 @@ def classify_entries(
     delay: float = config.INTER_CALL_DELAY_SEC,
     progress_cb: Callable[[int, int, str, dict], None] | None = None,
     should_cancel: Callable[[], bool] | None = None,
+    auth_abort_threshold: int | None = None,
 ) -> list[dict]:
     dups = {a for a, c in Counter(e["application_number"] for e in entries).items() if c > 1}
     rows: list[dict] = []
     total = len(entries)
+    auth_streak = 0
 
     for idx, entry in enumerate(entries, 1):
         if should_cancel and should_cancel():
@@ -66,6 +77,13 @@ def classify_entries(
         rows.append(row)
         if progress_cb:
             progress_cb(idx, total, appno, row)
+        if auth_abort_threshold and called:  # 무호출 행(unsupported/중복)은 streak에 중립 — 증가도 리셋도 안 함
+            if row.get("result_code") in config.FATAL_RESULT_CODES:
+                auth_streak += 1
+                if auth_streak >= auth_abort_threshold:
+                    raise AuthAbortError(auth_streak, rows)
+            else:
+                auth_streak = 0
         if called and idx < total and not (should_cancel and should_cancel()):
             time.sleep(delay)
 

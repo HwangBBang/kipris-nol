@@ -63,6 +63,8 @@ VERIFY_PATENT_APPLICATION_NUMBER = "10-2024-0000001"  # 특허 서비스 구독 
 FATAL_RESULT_CODES = {"30", "31"}
 # 파라미터 오류(10)가 동일 endpoint 에서 이 횟수만큼 연속되면 버그 신호로 보고 중단(spec §6).
 PARAM_ERROR_ABORT_THRESHOLD = 3
+# GUI: 연속 인증오류(30/31) 시 조기 중단(설계 §6.4). CLI는 미사용(기존 동작 유지)
+AUTH_ABORT_THRESHOLD = 3
 # "20"(결과없음)은 에러가 아님. 이 서비스는 보통 빈 resultCode + 0건으로 결과없음을 표현.
 NON_ERROR_RESULT_CODES = {"", "00", "20"}
 
