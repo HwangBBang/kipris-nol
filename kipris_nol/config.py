@@ -56,11 +56,15 @@ BASE_URL = "http://plus.kipris.or.kr/openapi/rest"
 TIMEOUT_SEC = 20
 RETRY = 1  # 일시 실패 시 단일 재시도
 INTER_CALL_DELAY_SEC = 0.4  # 호출 간 예의상 지연
+VERIFY_APPLICATION_NUMBER = "40-2024-0133564"  # 키 확인용 실존 상표 출원번호(라이브 검증됨) — 비실존 번호의 rc=10 모호성 회피
+VERIFY_PATENT_APPLICATION_NUMBER = "10-2024-0000001"  # 특허 서비스 구독 프로브용(미신청 감지 rc30은 번호 실존과 무관)
 
 # 인증/권한 오류 → 전건 중단(fail-fast). 단일 키·단일 서비스라 전건 동일 실패.
 FATAL_RESULT_CODES = {"30", "31"}
 # 파라미터 오류(10)가 동일 endpoint 에서 이 횟수만큼 연속되면 버그 신호로 보고 중단(spec §6).
 PARAM_ERROR_ABORT_THRESHOLD = 3
+# GUI: 연속 인증오류(30/31) 시 조기 중단(설계 §6.4). CLI는 미사용(기존 동작 유지)
+AUTH_ABORT_THRESHOLD = 3
 # "20"(결과없음)은 에러가 아님. 이 서비스는 보통 빈 resultCode + 0건으로 결과없음을 표현.
 NON_ERROR_RESULT_CODES = {"", "00", "20"}
 

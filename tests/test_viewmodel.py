@@ -37,6 +37,31 @@ class TestViewModel(unittest.TestCase):
         self.assertIn("자산화 100", s)
         self.assertIn("비용 50", s)
 
+    def test_verify_message_ok(self):
+        self.assertIn("확인되었습니다", viewmodel.verify_message("ok"))
+
+    def test_verify_message_auth30_tells_admin(self):
+        msg = viewmodel.verify_message("auth_30")
+        self.assertIn("오류 30", msg)
+        self.assertIn("관리자에게 문의", msg)
+
+    def test_verify_message_auth31_tells_admin_renewal(self):
+        msg = viewmodel.verify_message("auth_31")
+        self.assertIn("오류 31", msg)
+        self.assertIn("갱신", msg)
+
+    def test_verify_message_network_and_unknown_fallback(self):
+        self.assertIn("인터넷", viewmodel.verify_message("network"))
+        self.assertEqual(viewmodel.verify_message("???"), viewmodel.verify_message("network"))
+
+    def test_verify_message_ok_no_patent_warns_but_saved(self):  # cx-review 결정 2
+        msg = viewmodel.verify_message("ok_no_patent")
+        self.assertIn("특허", msg)
+        self.assertIn("저장", msg)
+
+    def test_verify_save_ok_set(self):  # cx-review 결정 4: 경고 후 저장 허용 결과 집합
+        self.assertEqual(viewmodel.VERIFY_SAVE_OK, {"ok", "ok_no_patent", "unverified"})
+
 
 if __name__ == "__main__":
     unittest.main()
