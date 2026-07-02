@@ -77,6 +77,90 @@ class TestGuiSmoke(unittest.TestCase):
         finally:
             app.destroy()
 
+    def test_banner_shown_without_key_hidden_with_key(self):
+        from unittest import mock
+        from kipris_nol import gui
+        with mock.patch.object(gui.keystore, "load_key", return_value=None):
+            app = gui.App()
+            try:
+                self.assertEqual(app._key_banner.winfo_manager(), "pack")
+            finally:
+                app.destroy()
+        with mock.patch.object(gui.keystore, "load_key", return_value="K"):
+            app = gui.App()
+            try:
+                self.assertEqual(app._key_banner.winfo_manager(), "")
+            finally:
+                app.destroy()
+
+    def test_settings_verify_ok_saves_and_hides_banner(self):
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        from kipris_nol import gui, keystore
+        tmp = Path(tempfile.mkdtemp())
+        with mock.patch.object(keystore, "config_dir", return_value=tmp):
+            app = gui.App()
+            try:
+                dlg = app._open_settings()
+                dlg._var.set("  MYKEY  ")
+                dlg._vq.put(("ok", "MYKEY"))  # (검증 결과, 검증했던 키) — 검증한 키를 저장
+                dlg._poll_verify()  # 큐에 결과가 있으므로 동기 1회로 처리됨
+                self.assertEqual(keystore.load_key(), "MYKEY")
+                self.assertIn("확인되었습니다", dlg._status.cget("text"))
+                self.assertEqual(app._key_banner.winfo_manager(), "")
+            finally:
+                app.destroy()
+
+    def test_settings_verify_auth30_does_not_save(self):
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        from kipris_nol import gui, keystore
+        tmp = Path(tempfile.mkdtemp())
+        with mock.patch.object(keystore, "config_dir", return_value=tmp):
+            app = gui.App()
+            try:
+                dlg = app._open_settings()
+                dlg._var.set("WRONG")
+                dlg._vq.put(("auth_30", "WRONG"))
+                dlg._poll_verify()
+                self.assertIsNone(keystore.load_key())
+                self.assertIn("오류 30", dlg._status.cget("text"))
+            finally:
+                app.destroy()
+
+    def test_settings_empty_key_disables_buttons(self):
+        from unittest import mock
+        from kipris_nol import gui
+        with mock.patch.object(gui.keystore, "load_key", return_value=None):
+            app = gui.App()
+            try:
+                dlg = app._open_settings()
+                self.assertEqual(str(dlg._verify_btn.cget("state")), "disabled")
+                dlg._var.set("X")
+                self.assertEqual(str(dlg._verify_btn.cget("state")), "normal")
+            finally:
+                app.destroy()
+
+    def test_verify_result_after_dialog_close_still_saves(self):  # cx-review MUST 3 상향 버그 가드
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        from kipris_nol import gui, keystore
+        tmp = Path(tempfile.mkdtemp())
+        with mock.patch.object(keystore, "config_dir", return_value=tmp):
+            app = gui.App()
+            try:
+                dlg = app._open_settings()
+                poll = dlg._poll_verify
+                dlg._vq.put(("ok", "K2"))
+                dlg.destroy()          # 검증 대기 중 사용자가 다이얼로그를 닫음
+                poll()                 # 앱 레벨 폴러 — 예외 없이 저장까지 수행돼야 함
+                self.assertEqual(keystore.load_key(), "K2")
+            finally:
+                app.destroy()
+
 
 if __name__ == "__main__":
     unittest.main()
