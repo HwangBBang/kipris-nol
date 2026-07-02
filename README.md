@@ -1,10 +1,53 @@
-# kipris-nol
+<h1 align="center">KIPRIS-NOL</h1>
 
-*IP 출원 데이터(KIPRIS Plus)를 회계 분류로 변환하는 배치 도구.*
+<p align="center">
+  <em>IP 출원(상표·특허)을 회계 자산·비용으로 자동 분류 — 이제 더블클릭 데스크탑 앱으로.</em>
+</p>
 
-> 상태: proof-of-concept · Python 3.14 · 데이터원: KIPRIS Plus Open API · 외부 의존성 0
+<p align="center">
+  <img src="https://img.shields.io/badge/status-proof--of--concept-orange" alt="status">
+  <img src="https://img.shields.io/badge/python-3.10+-3776AB?logo=python&logoColor=white" alt="python">
+  <img src="https://img.shields.io/badge/data-KIPRIS%20Plus-1f3a5f" alt="kipris plus">
+  <img src="https://img.shields.io/badge/cost-free%20tier-2f7d4f" alt="free tier">
+  <img src="https://img.shields.io/badge/deps-zero-6f42c1" alt="zero deps">
+  <img src="https://img.shields.io/badge/app-Windows%20.exe-0078D6?logo=windows&logoColor=white" alt="windows app">
+</p>
 
 ---
+
+출원번호 목록과 취득원가를 넣으면, 각 출원의 **법적상태**(등록·거절·심사중…)를 KIPRIS Plus Open API에서 조회해 **회계 자산·비용으로 분류**하고, **자산대장(ledger)**과 실무자 **검수용 CSV**를 만든다. 행정처분 현황을 단순 조회·덤프하던 초기 POC에서 **회계 분류 도구**로 전환되었다.
+
+설계 원칙은 **오분류 0**이다. 확신이 없는 건은 임의 분류하지 않고 `검토필요` 또는 `unsupported`로 격리한다.
+
+## Highlights
+
+- **출원번호 + 취득원가 → 회계 분류.** 등록→무형자산(상표권/특허권) · 탈락→비용(지급수수료) · 대기→건설중인자산(무형).
+- **비개발자용 데스크탑 앱.** Python·터미널 없이 더블클릭. 엑셀에서 복사→붙여넣기 → 실행 → CSV.
+- **오분류 0.** 애매·미지원 건은 `검토필요`/`unsupported`로 격리(임의 분류 안 함).
+- **외부 의존성 0.** 표준 라이브러리(+tkinter)만. 배포 `.exe`엔 accessKey 미포함.
+- **엑셀 친화 입출력.** 붙여넣기·CSV 입력, BOM 포함 CSV 출력(엑셀에서 바로 열림).
+
+---
+
+## ⬇️ 데스크탑 앱 (비개발자용, Windows)
+
+Python 설치·터미널 없이 더블클릭으로 사용합니다.
+
+### 설치
+1. 저장소 **Releases**에서 최신 `KIPRIS-NOL.exe` 다운로드.
+2. 첫 실행 시 Windows SmartScreen이 "Windows의 PC 보호" 경고를 띄우면 **[추가 정보] → [실행]**. (코드서명 미적용 — 내부 배포용)
+
+### 최초 1회 설정
+- 앱 상단 **[⚙ 설정(accessKey)]** → KIPRIS Plus accessKey 입력 → **[저장]**.
+- 키는 본인 PC(`%APPDATA%\KIPRIS-NOL\config.json`)에만 저장되며 앱 파일·결과물에는 포함되지 않는다.
+
+### 사용
+1. 엑셀에서 **[출원번호][취득원가]** 두 열을 복사(Ctrl+C).
+2. 앱 입력 칸에 붙여넣기(Ctrl+V). (또는 **[CSV 파일 열기]**)
+3. **[분류 실행]** → 진행바가 끝나면 결과 표와 요약이 표시된다.
+4. **[결과 폴더 열기]** → `내 문서\KIPRIS-NOL\`에 `ledger-*.csv`(자산대장)·`review-*.csv`(검수용)가 저장된다. 엑셀로 바로 열린다. (실행 중 취소 시 부분 결과는 `partial-*` 접두사로 저장된다.)
+
+> 분류 규칙은 CLI와 동일하다. 확신 없는 건은 **검토필요**로 격리된다(오분류 0).
 
 ## 1. 개요
 
