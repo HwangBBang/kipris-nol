@@ -38,6 +38,10 @@ class TestKeystore(unittest.TestCase):
         (self.tmp / "config.json").write_text("[]", encoding="utf-8")
         self.assertIsNone(keystore.load_key())
 
+    def test_non_string_key_is_none(self):  # access_key가 숫자/리스트 등이면 손상 취급
+        (self.tmp / "config.json").write_text('{"access_key": 123}', encoding="utf-8")
+        self.assertIsNone(keystore.load_key())
+
 
 if __name__ == "__main__":
     unittest.main()

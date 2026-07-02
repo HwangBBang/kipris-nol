@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install PyInstaller
-        run: pip install pyinstaller
+        run: pip install pyinstaller==6.21.0
       - name: Run tests (unittest, tkinter present on Windows)
         run: python -m unittest discover -s tests
       - name: Build exe

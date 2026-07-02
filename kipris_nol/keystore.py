@@ -29,7 +29,10 @@ def load_key() -> str | None:
         return None
     if not isinstance(data, dict):  # SHOULD-3: JSON-valid non-dict → 손상 취급(fail-closed)
         return None
-    key = (data.get("access_key") or "").strip()
+    raw = data.get("access_key")
+    if not isinstance(raw, str):  # 숫자/리스트 등 비문자열 → 손상 취급(fail-closed)
+        return None
+    key = raw.strip()
     return key or None
 
 
