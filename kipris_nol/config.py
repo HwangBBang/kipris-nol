@@ -56,6 +56,8 @@ BASE_URL = "http://plus.kipris.or.kr/openapi/rest"
 TIMEOUT_SEC = 20
 RETRY = 1  # 일시 실패 시 단일 재시도
 INTER_CALL_DELAY_SEC = 0.4  # 호출 간 예의상 지연
+VERIFY_APPLICATION_NUMBER = "40-2024-0133564"  # 키 확인용 실존 상표 출원번호(라이브 검증됨) — 비실존 번호의 rc=10 모호성 회피
+VERIFY_PATENT_APPLICATION_NUMBER = "10-2024-0000001"  # 특허 서비스 구독 프로브용(미신청 감지 rc30은 번호 실존과 무관)
 
 # 인증/권한 오류 → 전건 중단(fail-fast). 단일 키·단일 서비스라 전건 동일 실패.
 FATAL_RESULT_CODES = {"30", "31"}

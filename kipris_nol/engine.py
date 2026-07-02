@@ -108,3 +108,30 @@ def _classify_b(appno, right_code, cost_raw, svc, access_key, queried_at) -> dic
         result_code=parsed["result_code"], result_msg=parsed["result_msg"])
     row["raw_items"] = parsed["items"]
     return row
+
+
+def verify_key(access_key: str) -> str:
+    """저장 전 키 확인(설계 §6.3, cx-review 결정 2·4: 상표+특허 2회 프로브). 무료 쿼터 최대 2건 소모.
+
+    반환: "ok"(둘 다 확인) | "ok_no_patent"(상표만 확인 — 특허 미신청/만료/프로브 실패)
+          | "auth_30" | "auth_31"(키 자체 문제 — 특허 프로브 생략)
+          | "unverified"(30/31 아닌 비정상 응답 — 키 판정 불가) | "network"(연결/파싱 실패)
+    저장 허용 여부는 viewmodel.VERIFY_SAVE_OK가 정의한다.
+    """
+    try:
+        xml = core.call(config.VERIFY_APPLICATION_NUMBER, config.TRADEMARK_SEARCH, access_key)
+        rc = core.parse(xml)["result_code"]
+    except Exception:  # noqa: BLE001 — 네트워크/파싱 실패: 키 판정 불가(오프라인 저장 경로로 안내)
+        return "network"
+    if rc in config.FATAL_RESULT_CODES:
+        return f"auth_{rc}"
+    if rc not in ("", "00"):  # 성공도 인증오류도 아닌 응답(한도 초과·파라미터 오류 등) → 단정 금지
+        return "unverified"
+    adapter = config.SEARCH_ADAPTERS[config.RIGHT_CODE_INFO["10"]["adapter"]]
+    try:
+        xml2 = core.call(config.VERIFY_PATENT_APPLICATION_NUMBER, adapter["service"], access_key,
+                         extra_params=adapter["extra"])
+        rc2 = core.parse(xml2)["result_code"]
+    except Exception:  # noqa: BLE001 — 상표는 이미 확인됨: 특허 상태만 미확인으로 표시
+        return "ok_no_patent"
+    return "ok_no_patent" if rc2 in config.FATAL_RESULT_CODES else "ok"
