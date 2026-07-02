@@ -16,6 +16,20 @@ from pathlib import Path
 from . import accounting, config, core, engine
 
 
+def _use_utf8_console() -> None:
+    """Windows 콘솔(cp1252 등)에서 한글 진행 출력이 UnicodeEncodeError로 죽지 않도록 stdout/stderr를 UTF-8로.
+
+    Mac/Linux는 이미 UTF-8이라 무영향(재설정은 no-op). StringIO 등 reconfigure 없는 스트림은 건너뛴다.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            try:
+                reconfigure(encoding="utf-8")
+            except (ValueError, OSError):
+                pass
+
+
 def _row(appno, right_code, svc, *, queried_at, parsed=None, status, msg=""):
     base = {
         "application_number": appno,
@@ -51,6 +65,7 @@ def run(
     limit: int | None,
     delay: float,
 ) -> int:
+    _use_utf8_console()
     access_key = config.load_access_key()
     numbers = core.load_input(input_path)
     if limit is not None:
@@ -141,6 +156,7 @@ def run_accounting(input_path: Path, out_dir: Path, fmt: str, limit: int | None,
 
     source='c': 상표 정보검색 ApplicationStatus(확정 법적상태). 'b': 행정처리 이력 추론(보수).
     """
+    _use_utf8_console()
     access_key = config.load_access_key()
     entries = core.load_entries(input_path)
     if limit is not None:
@@ -202,6 +218,7 @@ def _print_acct_summary(rows) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    _use_utf8_console()
     parser = argparse.ArgumentParser(prog="kipris-nol", description="출원번호 → 회계 분류 (KIPRIS Plus)")
     parser.add_argument("--mode", choices=["accounting", "dump"], default="accounting",
                         help="accounting=등록/대기/탈락 분류(기본), dump=행정처리 이력 원시 덤프")

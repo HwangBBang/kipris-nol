@@ -251,5 +251,31 @@ class TestBModePatentGuard(unittest.TestCase):
         self.assertIn("B-모드", row["basis"])
 
 
+class TestConsoleEncoding(unittest.TestCase):
+    """Windows 콘솔(cp1252)에서 한글 진행 출력이 UnicodeEncodeError로 죽지 않아야 한다.
+
+    GH Actions windows-latest 회귀: Mac/Linux stdout은 utf-8이라 자연 재현 불가 →
+    cp1252 스트림으로 sys.stdout을 교체해 Windows 조건을 재현한다.
+    """
+
+    def _cp1252_stdout(self):
+        return io.TextIOWrapper(io.BytesIO(), encoding="cp1252", errors="strict", newline="")
+
+    def test_run_accounting_survives_cp1252_stdout(self):
+        out = tempfile.mkdtemp()
+        with mock.patch.object(config, "load_access_key", return_value="k"), \
+             mock.patch.object(core, "call", side_effect=lambda a, s, k, **kw: _patent_xml("거절")), \
+             mock.patch.object(sys, "stdout", self._cp1252_stdout()):
+            cli.run_accounting(_acct_testset([("10-2020-0012345", 5000)]), Path(out), "json", None, 0.0, "c")
+        # 예외 없이 여기 도달하면 성공
+
+    def test_run_survives_cp1252_stdout(self):
+        out = tempfile.mkdtemp()
+        with mock.patch.object(config, "load_access_key", return_value="k"), \
+             mock.patch.object(core, "call", return_value=GOOD_40), \
+             mock.patch.object(sys, "stdout", self._cp1252_stdout()):
+            cli.run(_testset(["40-2020-0012345"]), Path(out), "json", None, 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()
