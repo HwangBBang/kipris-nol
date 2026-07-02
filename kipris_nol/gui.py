@@ -273,7 +273,7 @@ class App(tk.Tk):
         self._cur.config(text="")
         n30 = sum(1 for r in rows if r.get("result_code") == "30")
         n31 = sum(1 for r in rows if r.get("result_code") == "31")
-        auth_err = n30 + n31
+        auth_err = sum(1 for r in rows if r.get("result_code") in config.FATAL_RESULT_CODES)  # partial- 판정은 config 기준(이중 소스 방지)
         out_dir = viewmodel.default_output_dir()
         out_dir.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
